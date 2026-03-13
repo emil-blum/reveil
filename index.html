@@ -192,8 +192,8 @@ body::before {
 .fw-body { position: relative; flex: 1; min-height: 0; }
 
 /* Camera window */
-#cam-win { width: 400px; top: 70px; left: 20px; }
-#cam-win .fw-body { height: 300px; background: #000; }
+#cam-win { width: 500px; top: 70px; left: 20px; }
+#cam-win .fw-body { height: 316px; background: #000; }
 #cam-vid { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; filter: grayscale(1) contrast(1.2); display: block; }
 #cam-ht { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
 #cam-face { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
@@ -336,7 +336,6 @@ body::before {
       <button class="tbtn" id="btn-cam" onclick="showWin('cam-win')" style="display:none;">[ CAMERA ]</button>
       <button class="tbtn" id="btn-aud" onclick="showWin('aud-win')" style="display:none;">[ AUDIO ]</button>
       <button class="ibtn" onclick="openInfo()">i</button>
-      <button class="tbtn" id="save-btn" onclick="captureScreen()">[ CAPTURE ]</button>
     </div>
   </div>
 
@@ -693,7 +692,7 @@ function startHalftone(vid) {
   const wrap = cvs.parentElement;
 
   const off = document.createElement('canvas');
-  const offCtx = off.getContext('2d');
+  const offCtx = off.getContext('2d', { willReadFrequently: true });
 
   function draw() {
     requestAnimationFrame(draw);
@@ -743,6 +742,7 @@ function startHalftone(vid) {
         const r = pixels[idx], g = pixels[idx+1], b = pixels[idx+2];
         let l = (0.2126*r + 0.7152*g + 0.0722*b) / 255;
         l = Math.max(0, Math.min(1, (l - 0.5) * 1.4 + 0.5));
+        // no invert — bright areas = large dots, dark = small dots
         const dotR = l * maxR;
         if(dotR < 0.4) continue;
         ctx.beginPath();
@@ -944,10 +944,20 @@ function initMap() {
     iconSize: [0, 0], iconAnchor: [0, 0],
   });
   S.mapMarker = L.marker([20, 0], { icon }).addTo(S.map);
+
+  // If geo already resolved before map was ready, apply now
+  if (S.pendingCoords) {
+    updateMap(S.pendingCoords[0], S.pendingCoords[1]);
+    S.pendingCoords = null;
+  }
 }
 
 function updateMap(lat, lng) {
-  if (!S.map) return;
+  if (!S.map || !S.mapMarker) {
+    // Map not ready yet — store coords for when it initialises
+    S.pendingCoords = [lat, lng];
+    return;
+  }
   S.map.setView([lat, lng], 11, { animate: true, duration: 2.5 });
   S.mapMarker.setLatLng([lat, lng]);
 }
@@ -1238,49 +1248,6 @@ document.getElementById('info-modal').addEventListener('click', e => {
   if(e.target === document.getElementById('info-modal')) closeInfo();
 });
 
-// ══════════════════════════════════════════════════
-// SCREEN CAPTURE
-// ══════════════════════════════════════════════════
-async function captureScreen() {
-  const btn = document.getElementById('save-btn');
-  btn.textContent = '[ CAPTURING... ]';
-  if(!window.html2canvas) {
-    const s = document.createElement('script');
-    s.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
-    document.head.appendChild(s);
-    s.onload = () => doCapture(btn);
-  } else doCapture(btn);
-}
-
-async function doCapture(btn) {
-  try {
-    // Snapshot both floating canvases before html2canvas runs
-    const htSnap = document.getElementById('cam-ht')?.toDataURL('image/png');
-    const faceSnap = document.getElementById('cam-face')?.toDataURL('image/png');
-
-    const cvs = await html2canvas(document.getElementById('app'), {
-      backgroundColor: '#000000', scale: 1, useCORS: true,
-      logging: false, allowTaint: true, letterRendering: true,
-    });
-    const ctx = cvs.getContext('2d');
-    // Redact sensitive fields
-    ['d-ip','d-crd','d-lip','d-ip2','d-lip2'].forEach(id => {
-      const el = document.getElementById(id); if(!el) return;
-      const r = el.getBoundingClientRect();
-      const sx = cvs.width/window.innerWidth, sy = cvs.height/window.innerHeight;
-      ctx.fillStyle = '#111'; ctx.fillRect(r.left*sx, r.top*sy, r.width*sx, r.height*sy);
-      ctx.fillStyle = '#333'; ctx.font = '8px monospace';
-      ctx.fillText('████████', r.left*sx+2, (r.top + r.height*.75)*sy);
-    });
-    const a = document.createElement('a');
-    a.download = 'REVEIL_' + new Date().toISOString().replace(/[:.]/g,'-').substring(0,19) + '.png';
-    a.href = cvs.toDataURL('image/png'); a.click();
-    btn.textContent = '[ CAPTURED ]'; setTimeout(() => btn.textContent = '[ CAPTURE ]', 2000);
-  } catch(e) {
-    console.error(e);
-    btn.textContent = '[ ERROR ]'; setTimeout(() => btn.textContent = '[ CAPTURE ]', 2000);
-  }
-}
 </script>
 </body>
 </html>
