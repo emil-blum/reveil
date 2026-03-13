@@ -743,7 +743,6 @@ function startHalftone(vid) {
         const r = pixels[idx], g = pixels[idx+1], b = pixels[idx+2];
         let l = (0.2126*r + 0.7152*g + 0.0722*b) / 255;
         l = Math.max(0, Math.min(1, (l - 0.5) * 1.4 + 0.5));
-        l = 1 - l; // invert
         const dotR = l * maxR;
         if(dotR < 0.4) continue;
         ctx.beginPath();
