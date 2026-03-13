@@ -626,7 +626,7 @@ async function loadModels() {
   const bar = document.getElementById('ls-bar');
   const pct = document.getElementById('ls-pct');
   const upd = p => { bar.style.width = p + '%'; pct.textContent = Math.round(p) + '%'; };
-  const BASE = 'https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/weights';
+  const BASE = '/weights';
   try {
     upd(8);  await faceapi.nets.tinyFaceDetector.loadFromUri(BASE);
     upd(32); await faceapi.nets.faceLandmark68TinyNet.loadFromUri(BASE);
