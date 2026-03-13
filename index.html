@@ -203,10 +203,10 @@ body::before {
 #rec-ind { position: absolute; top: 7px; left: 8px; font-size: 7px; letter-spacing: 2px; color: var(--text-dim); display: flex; align-items: center; gap: 4px; z-index: 10; pointer-events: none; }
 #rec-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--warning); animation: blink 1s infinite; display: none; }
 #face-tags { position: absolute; top: 6px; right: 6px; display: flex; flex-direction: column; gap: 3px; z-index: 10; pointer-events: none; }
-.ftag { font-size: 7px; letter-spacing: 1px; color: #fff; background: rgba(0,0,0,.75); border: 1px solid rgba(255,255,255,.1); padding: 2px 6px; white-space: nowrap; }
+.ftag { font-size: 10px; letter-spacing: 1px; color: #fff; background: #000; border: 1px solid rgba(255,255,255,.1); padding: 2px 6px; white-space: nowrap; }
 
 /* Face sub-panels under camera */
-#face-subs { display: flex; gap: 1px; height: 60px; background: var(--border); flex-shrink: 0; }
+#face-subs { display: flex; gap: 1px; height: 120px; background: var(--border); flex-shrink: 0; }
 .fsub { flex: 1; background: var(--panel-bg); display: flex; flex-direction: column; overflow: hidden; }
 .fsub-lbl { font-size: 6px; letter-spacing: 2px; color: var(--text-dim); padding: 2px 5px; border-bottom: 1px solid var(--border); flex-shrink: 0; }
 .fsub canvas { flex: 1; width: 100%; display: block; filter: grayscale(1); }
@@ -276,7 +276,7 @@ body::before {
 <!-- FLOATING CAMERA WINDOW -->
 <div class="float-win" id="cam-win">
   <div class="fw-bar" id="cam-bar">
-    <span class="fw-title">BIOMETRIC CAPTURE — LIVE FEED &nbsp;<span id="rec-ind"><span id="rec-dot"></span><span id="rec-lbl">STANDBY</span></span></span>
+    <span class="fw-title">BIOMETRIC CAPTURE</span>
     <div class="fw-controls">
       <button class="fw-btn" onclick="toggleHide('cam-win')">✕</button>
     </div>
@@ -674,8 +674,6 @@ function initCam() {
   vid.srcObject = window._stream;
   vid.play();
   document.getElementById('cam-nov').style.display = 'none';
-  document.getElementById('rec-dot').style.display = 'inline-block';
-  document.getElementById('rec-lbl').textContent = 'REC';
   document.getElementById('dot-cam').classList.add('alert');
   vid.addEventListener('loadedmetadata', () => {
     startHalftone(vid);
