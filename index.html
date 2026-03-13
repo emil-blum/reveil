@@ -1,0 +1,1571 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>REVEIL — You Are Being Observed</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=VT323&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #000000;
+    --panel-bg: #080808;
+    --border: #2a2a2a;
+    --border-bright: #444444;
+    --text-primary: #e8e8e8;
+    --text-dim: #666666;
+    --text-label: #999999;
+    --text-bright: #ffffff;
+    --accent: #c8c8c8;
+    --warning: #ff3333;
+    --warning-dim: #661111;
+    --scan: rgba(255,255,255,0.015);
+    --mono: 'Share Tech Mono', monospace;
+    --display: 'VT323', monospace;
+  }
+
+  html, body {
+    width: 100%; height: 100%;
+    background: var(--bg);
+    color: var(--text-primary);
+    font-family: var(--mono);
+    overflow-x: hidden;
+    cursor: crosshair;
+  }
+
+  /* ── SCANLINE OVERLAY ─────────────────────────────────────────── */
+  body::before {
+    content: '';
+    position: fixed; inset: 0; z-index: 9999;
+    background: repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      rgba(0,0,0,0.08) 2px,
+      rgba(0,0,0,0.08) 4px
+    );
+    pointer-events: none;
+  }
+
+  /* ── CLICK FLASH ──────────────────────────────────────────────── */
+  #flash {
+    position: fixed; inset: 0; z-index: 9998;
+    background: rgba(255,255,255,0);
+    pointer-events: none;
+    transition: background 0.05s;
+  }
+  #flash.active { background: rgba(255,255,255,0.04); }
+
+  /* ── CLICK RIPPLE ─────────────────────────────────────────────── */
+  .ripple {
+    position: fixed; pointer-events: none; z-index: 9997;
+    width: 40px; height: 40px;
+    border: 1px solid rgba(255,255,255,0.6);
+    border-radius: 50%;
+    transform: translate(-50%, -50%) scale(0);
+    animation: rippleOut 0.5s ease-out forwards;
+  }
+  @keyframes rippleOut {
+    to { transform: translate(-50%, -50%) scale(3); opacity: 0; }
+  }
+
+  /* ── LAYOUT ───────────────────────────────────────────────────── */
+  #app {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    padding: 0;
+  }
+
+  /* ── TOP BAR ──────────────────────────────────────────────────── */
+  #topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 16px;
+    border-bottom: 1px solid var(--border-bright);
+    background: var(--bg);
+    position: sticky; top: 0; z-index: 100;
+    flex-shrink: 0;
+  }
+
+  #topbar-left {
+    display: flex; align-items: center; gap: 20px;
+  }
+
+  .logo {
+    font-family: var(--display);
+    font-size: 32px;
+    color: var(--text-bright);
+    letter-spacing: 6px;
+    line-height: 1;
+  }
+
+  .tag-system {
+    font-size: 9px;
+    color: var(--text-dim);
+    letter-spacing: 2px;
+    line-height: 1.6;
+  }
+
+  #topbar-right {
+    display: flex; align-items: center; gap: 20px;
+  }
+
+  .signal-group {
+    display: flex; gap: 12px; align-items: center;
+  }
+
+  .signal-item {
+    font-size: 9px;
+    color: var(--text-dim);
+    letter-spacing: 1.5px;
+    display: flex; align-items: center; gap: 5px;
+  }
+
+  .signal-dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: #333;
+    animation: blink 2s infinite;
+  }
+  .signal-dot.live { background: #e8e8e8; }
+  .signal-dot.warn { background: var(--warning); }
+
+  @keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+  }
+
+  #live-clock {
+    font-size: 11px;
+    color: var(--text-primary);
+    letter-spacing: 2px;
+  }
+
+  .info-btn {
+    width: 22px; height: 22px;
+    border: 1px solid var(--border-bright);
+    border-radius: 50%;
+    background: transparent;
+    color: var(--text-label);
+    font-family: var(--mono);
+    font-size: 11px;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.2s;
+    letter-spacing: 0;
+  }
+  .info-btn:hover {
+    border-color: var(--text-primary);
+    color: var(--text-bright);
+  }
+
+  /* ── STATUS BAR ───────────────────────────────────────────────── */
+  #statusbar {
+    display: flex;
+    gap: 0;
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+
+  .status-item {
+    flex: 1;
+    padding: 5px 12px;
+    border-right: 1px solid var(--border);
+    font-size: 9px;
+    letter-spacing: 1.5px;
+    color: var(--text-dim);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .status-item:last-child { border-right: none; }
+  .status-item span { color: var(--text-primary); }
+
+  /* ── MAIN GRID ────────────────────────────────────────────────── */
+  #grid {
+    flex: 1;
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    grid-template-rows: auto auto auto;
+    gap: 1px;
+    background: var(--border);
+    border-top: none;
+  }
+
+  /* ── PANEL ────────────────────────────────────────────────────── */
+  .panel {
+    background: var(--panel-bg);
+    display: flex;
+    flex-direction: column;
+    min-height: 180px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .panel::after {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: linear-gradient(135deg, rgba(255,255,255,0.01) 0%, transparent 60%);
+    pointer-events: none;
+  }
+
+  .panel-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 7px 12px;
+    border-bottom: 1px solid var(--border);
+    background: rgba(255,255,255,0.02);
+    flex-shrink: 0;
+  }
+
+  .panel-title {
+    font-size: 9px;
+    letter-spacing: 3px;
+    color: var(--text-label);
+    font-family: var(--mono);
+  }
+
+  .panel-id {
+    font-size: 8px;
+    color: var(--border-bright);
+    letter-spacing: 1px;
+  }
+
+  .panel-body {
+    flex: 1;
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  /* ── DATA ROW ─────────────────────────────────────────────────── */
+  .data-row {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 8px;
+    border-bottom: 1px solid rgba(255,255,255,0.03);
+    padding-bottom: 7px;
+  }
+  .data-row:last-child { border-bottom: none; padding-bottom: 0; }
+
+  .data-label {
+    font-size: 8px;
+    letter-spacing: 2px;
+    color: var(--text-dim);
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  .data-value {
+    font-size: 11px;
+    color: var(--text-primary);
+    text-align: right;
+    word-break: break-all;
+    letter-spacing: 0.5px;
+  }
+
+  .data-value.large {
+    font-family: var(--display);
+    font-size: 22px;
+    line-height: 1;
+    color: var(--text-bright);
+  }
+
+  .data-value.warn {
+    color: var(--warning);
+  }
+
+  .data-value.dim {
+    color: var(--text-dim);
+  }
+
+  /* ── THREAT BADGE ─────────────────────────────────────────────── */
+  .badge {
+    display: inline-block;
+    font-size: 8px;
+    letter-spacing: 2px;
+    padding: 2px 6px;
+    border: 1px solid currentColor;
+  }
+  .badge.exposed { color: var(--warning); border-color: var(--warning-dim); }
+  .badge.safe { color: #555; }
+  .badge.active { color: var(--text-primary); }
+
+  /* ── FINGERPRINT PANEL ────────────────────────────────────────── */
+  #fp-display {
+    font-family: var(--display);
+    font-size: 13px;
+    color: var(--text-dim);
+    letter-spacing: 2px;
+    line-height: 1.6;
+    word-break: break-all;
+    padding: 8px;
+    border: 1px solid var(--border);
+    background: rgba(0,0,0,0.4);
+    font-size: 11px;
+    font-family: var(--mono);
+  }
+
+  /* ── MOUSE PANEL ──────────────────────────────────────────────── */
+  #mouse-viz {
+    flex: 1;
+    position: relative;
+    border: 1px solid var(--border);
+    background: #030303;
+    min-height: 80px;
+    overflow: hidden;
+  }
+
+  #mouse-crosshair-h, #mouse-crosshair-v {
+    position: absolute;
+    background: rgba(255,255,255,0.08);
+    transition: none;
+    pointer-events: none;
+  }
+  #mouse-crosshair-h { height: 1px; left: 0; right: 0; }
+  #mouse-crosshair-v { width: 1px; top: 0; bottom: 0; }
+
+  #mouse-dot {
+    position: absolute;
+    width: 5px; height: 5px;
+    border-radius: 50%;
+    background: var(--text-primary);
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+    transition: none;
+  }
+
+  .mouse-coords {
+    position: absolute;
+    bottom: 6px; right: 8px;
+    font-size: 9px;
+    color: var(--text-dim);
+    letter-spacing: 1px;
+    pointer-events: none;
+  }
+
+  /* ── TIMER DISPLAY ────────────────────────────────────────────── */
+  #timer-display {
+    font-family: var(--display);
+    font-size: 48px;
+    color: var(--text-bright);
+    letter-spacing: 4px;
+    line-height: 1;
+    text-align: center;
+    padding: 8px 0;
+  }
+
+  /* ── PROGRESS BAR ─────────────────────────────────────────────── */
+  .bar-outer {
+    height: 4px;
+    background: var(--border);
+    width: 100%;
+  }
+  .bar-inner {
+    height: 100%;
+    background: var(--text-primary);
+    transition: width 0.5s;
+  }
+
+  /* ── BATTERY INDICATOR ────────────────────────────────────────── */
+  .battery-wrap {
+    display: flex; align-items: center; gap: 8px;
+  }
+  .battery-icon {
+    width: 28px; height: 14px;
+    border: 1px solid var(--border-bright);
+    border-radius: 2px;
+    position: relative;
+    display: flex; align-items: center;
+    padding: 2px;
+  }
+  .battery-icon::after {
+    content: '';
+    position: absolute;
+    right: -5px;
+    width: 3px; height: 6px;
+    background: var(--border-bright);
+    border-radius: 0 2px 2px 0;
+  }
+  .battery-fill {
+    height: 100%;
+    background: var(--text-primary);
+    border-radius: 1px;
+    transition: width 0.5s;
+  }
+
+  /* ── NETWORK BARS ─────────────────────────────────────────────── */
+  .net-bars {
+    display: flex; gap: 3px; align-items: flex-end; height: 14px;
+  }
+  .net-bar {
+    width: 4px;
+    background: var(--border);
+    border-radius: 1px;
+  }
+  .net-bar.active { background: var(--text-primary); }
+
+  /* ── WIDE PANEL (spans 2 cols) ────────────────────────────────── */
+  .panel-wide { grid-column: span 2; }
+  .panel-tall { grid-row: span 2; }
+
+  /* ── THREAT ASSESSMENT ────────────────────────────────────────── */
+  #threat-panel {
+    background: var(--panel-bg);
+    border-top: 1px solid var(--border);
+    padding: 10px 12px;
+    font-size: 9px;
+    letter-spacing: 2px;
+    color: var(--text-dim);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-shrink: 0;
+  }
+
+  #threat-level {
+    font-family: var(--display);
+    font-size: 22px;
+    color: var(--text-primary);
+    letter-spacing: 4px;
+  }
+
+  .threat-stars { letter-spacing: 4px; }
+  .threat-star-on { color: var(--text-primary); }
+  .threat-star-off { color: var(--border-bright); }
+
+  /* ── CORNER BRACKETS ──────────────────────────────────────────── */
+  .bracket-tl, .bracket-tr, .bracket-bl, .bracket-br {
+    position: absolute;
+    width: 12px; height: 12px;
+    pointer-events: none;
+  }
+  .bracket-tl { top: 4px; left: 4px;
+    border-top: 1px solid var(--border-bright);
+    border-left: 1px solid var(--border-bright); }
+  .bracket-tr { top: 4px; right: 4px;
+    border-top: 1px solid var(--border-bright);
+    border-right: 1px solid var(--border-bright); }
+  .bracket-bl { bottom: 4px; left: 4px;
+    border-bottom: 1px solid var(--border-bright);
+    border-left: 1px solid var(--border-bright); }
+  .bracket-br { bottom: 4px; right: 4px;
+    border-bottom: 1px solid var(--border-bright);
+    border-right: 1px solid var(--border-bright); }
+
+  /* ── GLITCH ANIMATION ─────────────────────────────────────────── */
+  @keyframes glitch {
+    0%   { clip-path: inset(0 0 95% 0); transform: translate(-2px, 0); }
+    5%   { clip-path: inset(30% 0 50% 0); transform: translate(2px, 0); }
+    10%  { clip-path: inset(80% 0 5% 0); transform: translate(-1px, 0); }
+    15%  { clip-path: inset(0 0 0 0); transform: translate(0); }
+    100% { clip-path: inset(0 0 0 0); transform: translate(0); }
+  }
+
+  .glitch-reveal {
+    animation: glitch 0.4s steps(1) forwards;
+  }
+
+  /* ── INFO MODAL ───────────────────────────────────────────────── */
+  #info-modal {
+    display: none;
+    position: fixed; inset: 0; z-index: 10000;
+    background: rgba(0,0,0,0.92);
+    overflow-y: auto;
+    padding: 40px 20px;
+  }
+  #info-modal.open { display: flex; align-items: flex-start; justify-content: center; }
+
+  #info-content {
+    max-width: 600px;
+    width: 100%;
+    border: 1px solid var(--border-bright);
+    padding: 36px;
+    background: #050505;
+    position: relative;
+  }
+
+  #info-content .bracket-tl,
+  #info-content .bracket-tr,
+  #info-content .bracket-bl,
+  #info-content .bracket-br { width: 16px; height: 16px; }
+
+  .info-title {
+    font-family: var(--display);
+    font-size: 52px;
+    letter-spacing: 8px;
+    color: var(--text-bright);
+    margin-bottom: 4px;
+  }
+
+  .info-sub {
+    font-size: 9px;
+    letter-spacing: 3px;
+    color: var(--text-dim);
+    margin-bottom: 28px;
+  }
+
+  .info-section {
+    margin-bottom: 24px;
+  }
+
+  .info-section-title {
+    font-size: 8px;
+    letter-spacing: 3px;
+    color: var(--text-label);
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 6px;
+    margin-bottom: 10px;
+  }
+
+  .info-section p {
+    font-size: 11px;
+    color: var(--text-dim);
+    line-height: 1.8;
+    letter-spacing: 0.3px;
+  }
+
+  .info-links {
+    display: flex; flex-direction: column; gap: 6px;
+  }
+
+  .info-link {
+    font-size: 10px;
+    color: var(--text-label);
+    text-decoration: none;
+    letter-spacing: 1px;
+    display: flex; align-items: center; gap: 8px;
+    padding: 6px 0;
+    border-bottom: 1px solid var(--border);
+    transition: color 0.2s;
+  }
+  .info-link::before { content: '→'; }
+  .info-link:hover { color: var(--text-bright); }
+
+  .calumma-credit {
+    display: flex; align-items: center; gap: 12px;
+    margin-top: 24px;
+    padding-top: 18px;
+    border-top: 1px solid var(--border);
+  }
+
+  .calumma-name {
+    font-family: var(--display);
+    font-size: 24px;
+    letter-spacing: 4px;
+    color: var(--text-primary);
+  }
+
+  .calumma-desc {
+    font-size: 9px;
+    color: var(--text-dim);
+    letter-spacing: 1px;
+    line-height: 1.6;
+  }
+
+  #info-close {
+    position: absolute; top: 12px; right: 14px;
+    background: none; border: 1px solid var(--border);
+    color: var(--text-dim); font-family: var(--mono);
+    font-size: 10px; letter-spacing: 2px;
+    padding: 4px 10px; cursor: pointer;
+    transition: all 0.2s;
+  }
+  #info-close:hover { border-color: var(--text-primary); color: var(--text-bright); }
+
+  /* ── SAVE BUTTON ──────────────────────────────────────────────── */
+  #save-btn {
+    background: none;
+    border: 1px solid var(--border-bright);
+    color: var(--text-dim);
+    font-family: var(--mono);
+    font-size: 9px;
+    letter-spacing: 2px;
+    padding: 5px 14px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  #save-btn:hover {
+    border-color: var(--text-primary);
+    color: var(--text-bright);
+  }
+  #save-btn:active { opacity: 0.6; }
+
+  /* ── MOBILE WALL ──────────────────────────────────────────────── */
+  #mobile-wall {
+    display: none;
+    position: fixed; inset: 0; z-index: 20000;
+    background: var(--bg);
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 32px;
+    text-align: center;
+  }
+
+  #mobile-wall .logo { font-size: 52px; margin-bottom: 8px; }
+  #mobile-wall p { font-size: 10px; color: var(--text-dim); letter-spacing: 2px; line-height: 2; max-width: 280px; }
+  #mobile-wall .info-btn-mobile {
+    margin-top: 28px;
+    border: 1px solid var(--border-bright);
+    padding: 8px 24px;
+    font-size: 10px; letter-spacing: 3px;
+    color: var(--text-label);
+    background: none;
+    cursor: pointer;
+    font-family: var(--mono);
+    transition: all 0.2s;
+  }
+  #mobile-wall .info-btn-mobile:hover { color: var(--text-bright); border-color: var(--text-primary); }
+
+  @media (max-width: 800px) {
+    #mobile-wall { display: flex; }
+    #app { display: none; }
+  }
+
+  /* ── UTILITY ──────────────────────────────────────────────────── */
+  .loading-val { color: var(--border-bright); font-size: 9px; letter-spacing: 1px; }
+</style>
+</head>
+<body>
+
+<!-- Click flash overlay -->
+<div id="flash"></div>
+
+<!-- Mobile wall -->
+<div id="mobile-wall">
+  <div class="logo">REVEIL</div>
+  <p>THIS EXPERIENCE IS DESIGNED FOR DESKTOP.</p>
+  <p>THE FULL SURVEILLANCE DASHBOARD REQUIRES A LARGER SCREEN.</p>
+  <p style="margin-top:16px; color: #444;">RETURN ON A DESKTOP BROWSER<br>TO SEE WHAT YOU ARE BROADCASTING.</p>
+  <button class="info-btn-mobile" onclick="openInfo()">ABOUT THIS PROJECT</button>
+</div>
+
+<!-- Main app -->
+<div id="app">
+
+  <!-- TOP BAR -->
+  <div id="topbar">
+    <div id="topbar-left">
+      <div class="logo">REVEIL</div>
+      <div class="tag-system">
+        PASSIVE DATA COLLECTION ACTIVE<br>
+        SUBJECT MONITORING PROTOCOL v1.0
+      </div>
+    </div>
+    <div id="topbar-right">
+      <div class="signal-group">
+        <div class="signal-item"><div class="signal-dot live" id="dot-capture"></div> CAPTURE</div>
+        <div class="signal-item"><div class="signal-dot live" id="dot-tracking"></div> TRACKING</div>
+        <div class="signal-item"><div class="signal-dot" id="dot-camera"></div> CAMERA</div>
+        <div class="signal-item"><div class="signal-dot" id="dot-audio"></div> AUDIO</div>
+      </div>
+      <div id="live-clock">--:--:--</div>
+      <button class="info-btn" onclick="openInfo()" title="About Reveil">i</button>
+      <button id="save-btn" onclick="captureScreen()">[ CAPTURE ]</button>
+    </div>
+  </div>
+
+  <!-- STATUS BAR -->
+  <div id="statusbar">
+    <div class="status-item">IP: <span id="sb-ip">RESOLVING...</span></div>
+    <div class="status-item">LOC: <span id="sb-loc">--</span></div>
+    <div class="status-item">ISP: <span id="sb-isp">--</span></div>
+    <div class="status-item">OS: <span id="sb-os">--</span></div>
+    <div class="status-item">BROWSER: <span id="sb-browser">--</span></div>
+    <div class="status-item">FINGERPRINT: <span id="sb-fp">GENERATING...</span></div>
+  </div>
+
+  <!-- GRID -->
+  <div id="grid">
+
+    <!-- PANEL: NETWORK INTEL -->
+    <div class="panel">
+      <div class="bracket-tl"></div><div class="bracket-tr"></div>
+      <div class="bracket-bl"></div><div class="bracket-br"></div>
+      <div class="panel-header">
+        <span class="panel-title">NETWORK INTEL</span>
+        <span class="panel-id">SIG/NET-01</span>
+      </div>
+      <div class="panel-body">
+        <div class="data-row">
+          <span class="data-label">PUBLIC IP</span>
+          <span class="data-value warn" id="d-ip">RESOLVING...</span>
+        </div>
+        <div class="data-row">
+          <span class="data-label">LOCAL IP (WebRTC)</span>
+          <span class="data-value warn" id="d-local-ip">SCANNING...</span>
+        </div>
+        <div class="data-row">
+          <span class="data-label">ISP</span>
+          <span class="data-value" id="d-isp">--</span>
+        </div>
+        <div class="data-row">
+          <span class="data-label">CONNECTION</span>
+          <div style="text-align:right;">
+            <div style="display:flex; align-items:center; gap:8px; justify-content:flex-end;">
+              <div class="net-bars" id="net-bars">
+                <div class="net-bar" style="height:4px"></div>
+                <div class="net-bar" style="height:7px"></div>
+                <div class="net-bar" style="height:10px"></div>
+                <div class="net-bar" style="height:13px"></div>
+              </div>
+              <span class="data-value" id="d-connection">--</span>
+            </div>
+          </div>
+        </div>
+        <div class="data-row">
+          <span class="data-label">VPN DETECTED</span>
+          <span class="data-value" id="d-vpn">CHECKING...</span>
+        </div>
+        <div class="data-row">
+          <span class="data-label">REFERRER</span>
+          <span class="data-value dim" id="d-referrer">NONE</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- PANEL: SYSTEM PROFILE -->
+    <div class="panel">
+      <div class="bracket-tl"></div><div class="bracket-tr"></div>
+      <div class="bracket-bl"></div><div class="bracket-br"></div>
+      <div class="panel-header">
+        <span class="panel-title">SYSTEM PROFILE</span>
+        <span class="panel-id">SIG/SYS-02</span>
+      </div>
+      <div class="panel-body">
+        <div class="data-row">
+          <span class="data-label">BROWSER</span>
+          <span class="data-value" id="d-browser">--</span>
+        </div>
+        <div class="data-row">
+          <span class="data-label">OS / PLATFORM</span>
+          <span class="data-value" id="d-os">--</span>
+        </div>
+        <div class="data-row">
+          <span class="data-label">DEVICE TYPE</span>
+          <span class="data-value" id="d-device">--</span>
+        </div>
+        <div class="data-row">
+          <span class="data-label">SCREEN</span>
+          <span class="data-value" id="d-screen">--</span>
+        </div>
+        <div class="data-row">
+          <span class="data-label">CPU CORES</span>
+          <span class="data-value large" id="d-cpu">--</span>
+        </div>
+        <div class="data-row">
+          <span class="data-label">MEMORY (RAM)</span>
+          <span class="data-value large" id="d-ram">--</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- PANEL: LOCATION -->
+    <div class="panel">
+      <div class="bracket-tl"></div><div class="bracket-tr"></div>
+      <div class="bracket-bl"></div><div class="bracket-br"></div>
+      <div class="panel-header">
+        <span class="panel-title">ESTIMATED LOCATION</span>
+        <span class="panel-id">SIG/GEO-03</span>
+      </div>
+      <div class="panel-body">
+        <div class="data-row">
+          <span class="data-label">CITY</span>
+          <span class="data-value large" id="d-city">--</span>
+        </div>
+        <div class="data-row">
+          <span class="data-label">REGION</span>
+          <span class="data-value" id="d-region">--</span>
+        </div>
+        <div class="data-row">
+          <span class="data-label">COUNTRY</span>
+          <span class="data-value" id="d-country">--</span>
+        </div>
+        <div class="data-row">
+          <span class="data-label">COORDINATES</span>
+          <span class="data-value warn" id="d-coords">--</span>
+        </div>
+        <div class="data-row">
+          <span class="data-label">TIMEZONE</span>
+          <span class="data-value" id="d-timezone">--</span>
+        </div>
+        <div class="data-row">
+          <span class="data-label">NOTE</span>
+          <span class="data-value dim" style="font-size:9px; letter-spacing: 1px;">ESTIMATED VIA IP ROUTING</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- PANEL: BEHAVIOURAL - TIMER -->
+    <div class="panel">
+      <div class="bracket-tl"></div><div class="bracket-tr"></div>
+      <div class="bracket-bl"></div><div class="bracket-br"></div>
+      <div class="panel-header">
+        <span class="panel-title">TIME OBSERVED</span>
+        <span class="panel-id">SIG/BEH-04</span>
+      </div>
+      <div class="panel-body" style="justify-content: center; align-items: center;">
+        <div id="timer-display">00:00:00</div>
+        <div style="font-size: 8px; letter-spacing: 3px; color: var(--text-dim); margin-top: 4px; text-align: center;">CONTINUOUS SINCE PAGE LOAD</div>
+        <div class="data-row" style="width:100%; margin-top: 12px;">
+          <span class="data-label">TOTAL CLICKS</span>
+          <span class="data-value large" id="d-clicks">0</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- PANEL: MOUSE TRACKER -->
+    <div class="panel">
+      <div class="bracket-tl"></div><div class="bracket-tr"></div>
+      <div class="bracket-bl"></div><div class="bracket-br"></div>
+      <div class="panel-header">
+        <span class="panel-title">CURSOR TRACKING</span>
+        <span class="panel-id">SIG/BEH-05</span>
+      </div>
+      <div class="panel-body">
+        <div class="data-row">
+          <span class="data-label">X AXIS</span>
+          <span class="data-value large" id="d-mx">0</span>
+        </div>
+        <div class="data-row">
+          <span class="data-label">Y AXIS</span>
+          <span class="data-value large" id="d-my">0</span>
+        </div>
+        <div class="data-row">
+          <span class="data-label">VELOCITY</span>
+          <span class="data-value" id="d-velocity">0 px/s</span>
+        </div>
+        <div id="mouse-viz">
+          <div id="mouse-crosshair-h"></div>
+          <div id="mouse-crosshair-v"></div>
+          <div id="mouse-dot"></div>
+          <div class="mouse-coords" id="mouse-coords-label">0, 0</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PANEL: BATTERY + ENVIRONMENT -->
+    <div class="panel">
+      <div class="bracket-tl"></div><div class="bracket-tr"></div>
+      <div class="bracket-bl"></div><div class="bracket-br"></div>
+      <div class="panel-header">
+        <span class="panel-title">DEVICE STATE</span>
+        <span class="panel-id">SIG/DEV-06</span>
+      </div>
+      <div class="panel-body">
+        <div class="data-row">
+          <span class="data-label">BATTERY</span>
+          <div class="battery-wrap">
+            <div class="battery-icon">
+              <div class="bar-inner battery-fill" id="d-battery-bar" style="width:50%"></div>
+            </div>
+            <span class="data-value" id="d-battery">--</span>
+          </div>
+        </div>
+        <div class="data-row">
+          <span class="data-label">CHARGING</span>
+          <span class="data-value" id="d-charging">--</span>
+        </div>
+        <div class="data-row">
+          <span class="data-label">LANGUAGE</span>
+          <span class="data-value" id="d-language">--</span>
+        </div>
+        <div class="data-row">
+          <span class="data-label">COLOUR DEPTH</span>
+          <span class="data-value" id="d-colour">--</span>
+        </div>
+        <div class="data-row">
+          <span class="data-label">DO NOT TRACK</span>
+          <span class="data-value" id="d-dnt">--</span>
+        </div>
+        <div class="data-row">
+          <span class="data-label">AD BLOCKER</span>
+          <span class="data-value" id="d-adblock">CHECKING...</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- PANEL: FINGERPRINT (wide) -->
+    <div class="panel panel-wide">
+      <div class="bracket-tl"></div><div class="bracket-tr"></div>
+      <div class="bracket-bl"></div><div class="bracket-br"></div>
+      <div class="panel-header">
+        <span class="panel-title">CANVAS FINGERPRINT — UNIQUE DEVICE ID</span>
+        <span class="panel-id">SIG/FP-07</span>
+      </div>
+      <div class="panel-body" style="flex-direction: row; gap: 16px; align-items: stretch;">
+        <div style="flex:1">
+          <div style="font-size: 8px; letter-spacing: 2px; color: var(--text-dim); margin-bottom: 8px;">RAW HASH</div>
+          <div id="fp-display">GENERATING...</div>
+          <div style="font-size: 8px; color: var(--text-dim); letter-spacing: 1px; margin-top: 8px; line-height: 1.8;">
+            This hash is generated from how your GPU renders graphics. It is unique to your device and browser combination — and cannot be blocked by clearing cookies or using private browsing.
+          </div>
+        </div>
+        <div style="flex:1; border-left: 1px solid var(--border); padding-left: 16px;">
+          <div style="font-size: 8px; letter-spacing: 2px; color: var(--text-dim); margin-bottom: 8px;">PRIVACY STATE</div>
+          <div class="data-row">
+            <span class="data-label">INCOGNITO MODE</span>
+            <span class="data-value" id="d-incognito">DETECTING...</span>
+          </div>
+          <div class="data-row">
+            <span class="data-label">COOKIES ENABLED</span>
+            <span class="data-value" id="d-cookies">--</span>
+          </div>
+          <div class="data-row">
+            <span class="data-label">JS ENABLED</span>
+            <span class="data-value">YES <span class="badge active">CONFIRMED</span></span>
+          </div>
+          <div class="data-row">
+            <span class="data-label">LOCAL STORAGE</span>
+            <span class="data-value" id="d-storage">--</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PANEL: INTELLIGENCE SUMMARY (wide) -->
+    <div class="panel" style="grid-column: span 3;">
+      <div class="bracket-tl"></div><div class="bracket-tr"></div>
+      <div class="bracket-bl"></div><div class="bracket-br"></div>
+      <div class="panel-header">
+        <span class="panel-title">INTELLIGENCE SUMMARY</span>
+        <span class="panel-id">SIG/SUM-08</span>
+      </div>
+      <div class="panel-body" style="flex-direction: row; gap: 0;">
+        <div style="flex:1; padding-right: 16px;">
+          <div style="font-size: 8px; letter-spacing: 2px; color: var(--text-dim); margin-bottom: 8px;">EXPOSURE ASSESSMENT</div>
+          <div class="data-row">
+            <span class="data-label">IDENTITY SIGNALS</span>
+            <span class="data-value" id="sum-identity">CALCULATING...</span>
+          </div>
+          <div class="data-row">
+            <span class="data-label">LOCATION PRECISION</span>
+            <span class="data-value" id="sum-location">CALCULATING...</span>
+          </div>
+          <div class="data-row">
+            <span class="data-label">TRACKING RESISTANCE</span>
+            <span class="data-value" id="sum-tracking">CALCULATING...</span>
+          </div>
+        </div>
+        <div style="width:1px; background: var(--border); margin: 0 16px;"></div>
+        <div style="flex:2;">
+          <div style="font-size: 8px; letter-spacing: 2px; color: var(--text-dim); margin-bottom: 8px;">WHAT THIS MEANS</div>
+          <div id="summary-text" style="font-size: 10px; color: var(--text-dim); line-height: 1.9; letter-spacing: 0.3px;">
+            Every website you visit receives this data automatically — without asking. Your IP address, browser fingerprint, device specifications, and approximate location are transmitted with each page request. This is not a hack. This is how the web works.
+          </div>
+        </div>
+        <div style="width:1px; background: var(--border); margin: 0 16px;"></div>
+        <div style="flex:1; display:flex; flex-direction:column; justify-content:center; align-items:center; gap:8px;">
+          <div style="font-size: 8px; letter-spacing: 2px; color: var(--text-dim);">THREAT LEVEL</div>
+          <div id="threat-level" style="font-family: var(--display); font-size: 42px; color: var(--text-primary); letter-spacing: 6px;">--</div>
+          <div class="threat-stars" id="threat-stars">
+            <span class="threat-star-off">★</span>
+            <span class="threat-star-off">★</span>
+            <span class="threat-star-off">★</span>
+            <span class="threat-star-off">★</span>
+            <span class="threat-star-off">★</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /grid -->
+</div><!-- /app -->
+
+<!-- INFO MODAL -->
+<div id="info-modal">
+  <div id="info-content">
+    <div class="bracket-tl"></div><div class="bracket-tr"></div>
+    <div class="bracket-bl"></div><div class="bracket-br"></div>
+    <button id="info-close" onclick="closeInfo()">[ CLOSE ]</button>
+    <div class="info-title">REVEIL</div>
+    <div class="info-sub">re·veil — (1) TO WAKE UP (2) TO REMOVE A VEIL (3) TO REVEAL</div>
+
+    <div class="info-section">
+      <div class="info-section-title">WHAT IS THIS</div>
+      <p>Reveil is a privacy awareness project. Every data point you see on this screen was collected automatically the moment you visited — no hacking, no phishing, no malware. This is the information your browser broadcasts passively to every website you visit, every day.</p>
+    </div>
+
+    <div class="info-section">
+      <div class="info-section-title">YOUR DATA STAYS WITH YOU</div>
+      <p>Nothing shown here is sent to any server, stored in any database, or shared with anyone. All processing happens entirely in your browser, on your device. This project has no backend. You can verify this by inspecting the page source. The only external call made is to <em>ipapi.co</em> to resolve your IP location — the same service used by millions of websites to display location-relevant content.</p>
+    </div>
+
+    <div class="info-section">
+      <div class="info-section-title">PROTECT YOURSELF</div>
+      <div class="info-links">
+        <a class="info-link" href="https://www.eff.org/issues/privacy" target="_blank">EFF — Electronic Frontier Foundation</a>
+        <a class="info-link" href="https://privacyguides.org" target="_blank">Privacy Guides — Tools & Recommendations</a>
+        <a class="info-link" href="https://coveryourtracks.eff.org" target="_blank">Cover Your Tracks — Test Your Browser</a>
+        <a class="info-link" href="https://www.mozilla.org/firefox/" target="_blank">Firefox — Privacy-Focused Browser</a>
+      </div>
+    </div>
+
+    <div class="calumma-credit">
+      <div>
+        <div class="calumma-name">CALUMMA</div>
+        <div class="calumma-desc">
+          A creative studio for rebellious optimists.<br>
+          We design for organisations building a better world.
+        </div>
+        <a href="https://calumma.design" target="_blank" class="info-link" style="margin-top: 8px; font-size: 9px;">calumma.design</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════════════════════════
+// UTILITIES
+// ══════════════════════════════════════════════════════
+
+function set(id, val, cls) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.textContent = val;
+  if (cls) el.className = 'data-value ' + cls;
+}
+
+function setHTML(id, html) {
+  const el = document.getElementById(id);
+  if (el) el.innerHTML = html;
+}
+
+// ══════════════════════════════════════════════════════
+// CLOCK
+// ══════════════════════════════════════════════════════
+
+function updateClock() {
+  const now = new Date();
+  const t = [now.getHours(), now.getMinutes(), now.getSeconds()]
+    .map(n => String(n).padStart(2, '0')).join(':');
+  document.getElementById('live-clock').textContent = t;
+}
+updateClock();
+setInterval(updateClock, 1000);
+
+// ══════════════════════════════════════════════════════
+// TIMER
+// ══════════════════════════════════════════════════════
+
+const startTime = Date.now();
+setInterval(() => {
+  const secs = Math.floor((Date.now() - startTime) / 1000);
+  const h = Math.floor(secs / 3600);
+  const m = Math.floor((secs % 3600) / 60);
+  const s = secs % 60;
+  set('timer-display',
+    [h,m,s].map(n => String(n).padStart(2,'0')).join(':'));
+}, 1000);
+
+// ══════════════════════════════════════════════════════
+// MOUSE TRACKING
+// ══════════════════════════════════════════════════════
+
+let lastMX = 0, lastMY = 0, lastMoveTime = Date.now();
+let velocity = 0;
+const viz = document.getElementById('mouse-viz');
+
+document.addEventListener('mousemove', e => {
+  const now = Date.now();
+  const dx = e.clientX - lastMX;
+  const dy = e.clientY - lastMY;
+  const dt = (now - lastMoveTime) / 1000;
+  velocity = dt > 0 ? Math.round(Math.sqrt(dx*dx+dy*dy) / dt) : 0;
+
+  set('d-mx', e.clientX);
+  set('d-my', e.clientY);
+  set('d-velocity', velocity + ' px/s');
+  document.getElementById('mouse-coords-label').textContent = e.clientX + ', ' + e.clientY;
+
+  // Update mini viz
+  const rect = viz.getBoundingClientRect();
+  const rx = ((e.clientX - rect.left) / rect.width) * 100;
+  const ry = ((e.clientY - rect.top) / rect.height) * 100;
+  const clampX = Math.max(0, Math.min(100, rx));
+  const clampY = Math.max(0, Math.min(100, ry));
+  document.getElementById('mouse-crosshair-h').style.top = clampY + '%';
+  document.getElementById('mouse-crosshair-v').style.left = clampX + '%';
+  document.getElementById('mouse-dot').style.left = clampX + '%';
+  document.getElementById('mouse-dot').style.top = clampY + '%';
+
+  lastMX = e.clientX; lastMY = e.clientY; lastMoveTime = now;
+});
+
+// ══════════════════════════════════════════════════════
+// CLICK COUNTER
+// ══════════════════════════════════════════════════════
+
+let clicks = 0;
+document.addEventListener('click', e => {
+  clicks++;
+  set('d-clicks', clicks);
+
+  // Flash
+  const flash = document.getElementById('flash');
+  flash.classList.add('active');
+  setTimeout(() => flash.classList.remove('active'), 80);
+
+  // Ripple
+  const r = document.createElement('div');
+  r.className = 'ripple';
+  r.style.left = e.clientX + 'px';
+  r.style.top = e.clientY + 'px';
+  document.body.appendChild(r);
+  setTimeout(() => r.remove(), 600);
+});
+
+// ══════════════════════════════════════════════════════
+// BROWSER + SYSTEM DATA
+// ══════════════════════════════════════════════════════
+
+(function detectBrowser() {
+  const ua = navigator.userAgent;
+  let browser = 'UNKNOWN', version = '';
+
+  if (/Edg\//.test(ua)) { browser = 'EDGE'; version = ua.match(/Edg\/([\d.]+)/)?.[1] || ''; }
+  else if (/OPR\//.test(ua)) { browser = 'OPERA'; version = ua.match(/OPR\/([\d.]+)/)?.[1] || ''; }
+  else if (/Chrome\//.test(ua) && !/Chromium/.test(ua)) { browser = 'CHROME'; version = ua.match(/Chrome\/([\d.]+)/)?.[1] || ''; }
+  else if (/Firefox\//.test(ua)) { browser = 'FIREFOX'; version = ua.match(/Firefox\/([\d.]+)/)?.[1] || ''; }
+  else if (/Safari\//.test(ua)) { browser = 'SAFARI'; version = ua.match(/Version\/([\d.]+)/)?.[1] || ''; }
+  else if (/Trident\//.test(ua)) { browser = 'IE'; }
+
+  const bStr = browser + (version ? ' ' + version.split('.')[0] : '');
+  set('d-browser', bStr);
+  set('sb-browser', bStr);
+  document.getElementById('sb-os').textContent = getOS();
+})();
+
+function getOS() {
+  const ua = navigator.userAgent;
+  if (/Windows NT 10/.test(ua)) return 'WINDOWS 10/11';
+  if (/Windows NT 6.3/.test(ua)) return 'WINDOWS 8.1';
+  if (/Windows/.test(ua)) return 'WINDOWS';
+  if (/Mac OS X 10_15/.test(ua)) return 'MACOS CATALINA+';
+  if (/Mac OS X/.test(ua)) { const v = ua.match(/Mac OS X ([\d_]+)/)?.[1]?.replace(/_/g,'.')||''; return 'MACOS ' + v; }
+  if (/iPhone/.test(ua)) return 'IOS (IPHONE)';
+  if (/iPad/.test(ua)) return 'IOS (IPAD)';
+  if (/Android/.test(ua)) { const v = ua.match(/Android ([\d.]+)/)?.[1]||''; return 'ANDROID ' + v; }
+  if (/Linux/.test(ua)) return 'LINUX';
+  if (/CrOS/.test(ua)) return 'CHROME OS';
+  return 'UNKNOWN';
+}
+
+(function detectSystem() {
+  const ua = navigator.userAgent;
+  set('d-os', getOS());
+
+  const isMobile = /Mobi|Android|iPhone|iPad/.test(ua);
+  const isTablet = /iPad|Tablet/.test(ua);
+  set('d-device', isTablet ? 'TABLET' : isMobile ? 'MOBILE' : 'DESKTOP');
+
+  set('d-screen', screen.width + '×' + screen.height + ' @' + (window.devicePixelRatio||1) + 'x');
+  set('d-colour', screen.colorDepth + '-BIT');
+  set('d-cpu', (navigator.hardwareConcurrency || '--') + ' CORES');
+  const ram = navigator.deviceMemory;
+  set('d-ram', ram ? ram + ' GB' : 'UNKNOWN');
+
+  set('d-language', (navigator.language || '--').toUpperCase());
+
+  const dnt = navigator.doNotTrack;
+  const dntEl = document.getElementById('d-dnt');
+  if (dnt === '1') { dntEl.textContent = 'ON'; dntEl.className = 'data-value'; }
+  else if (dnt === '0') { dntEl.textContent = 'OFF'; dntEl.className = 'data-value warn'; }
+  else { dntEl.textContent = 'UNSET'; dntEl.className = 'data-value dim'; }
+
+  set('d-cookies', navigator.cookieEnabled ? 'YES' : 'NO');
+
+  try {
+    localStorage.setItem('_rv_test', '1');
+    localStorage.removeItem('_rv_test');
+    set('d-storage', 'AVAILABLE');
+  } catch(e) { set('d-storage', 'BLOCKED'); }
+
+  // Referrer
+  const ref = document.referrer;
+  if (ref) {
+    try {
+      const url = new URL(ref);
+      set('d-referrer', url.hostname.toUpperCase());
+    } catch(e) { set('d-referrer', ref.substring(0,30).toUpperCase()); }
+  } else {
+    set('d-referrer', 'DIRECT / NONE');
+  }
+
+  // Timezone
+  const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || '--';
+  set('d-timezone', tz.toUpperCase());
+})();
+
+// ══════════════════════════════════════════════════════
+// NETWORK INFO
+// ══════════════════════════════════════════════════════
+
+(function detectNetwork() {
+  const conn = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+  if (conn) {
+    const type = (conn.effectiveType || conn.type || 'UNKNOWN').toUpperCase();
+    const dl = conn.downlink ? conn.downlink + ' Mbps' : '';
+    set('d-connection', type + (dl ? ' · ' + dl : ''));
+
+    // Net bars (based on effectiveType)
+    const bars = document.querySelectorAll('.net-bar');
+    const strength = {'slow-2g': 1, '2g': 2, '3g': 3, '4g': 4, 'wifi': 4, 'ethernet': 4};
+    const s = strength[conn.effectiveType] || 2;
+    bars.forEach((b, i) => { if (i < s) b.classList.add('active'); });
+  } else {
+    set('d-connection', 'UNKNOWN');
+    document.querySelectorAll('.net-bar').forEach(b => b.classList.add('active'));
+  }
+})();
+
+// ══════════════════════════════════════════════════════
+// BATTERY
+// ══════════════════════════════════════════════════════
+
+if (navigator.getBattery) {
+  navigator.getBattery().then(battery => {
+    function updateBat() {
+      const pct = Math.round(battery.level * 100);
+      set('d-battery', pct + '%');
+      set('d-charging', battery.charging ? 'YES ⚡' : 'NO');
+      document.getElementById('d-battery-bar').style.width = pct + '%';
+    }
+    updateBat();
+    battery.addEventListener('levelchange', updateBat);
+    battery.addEventListener('chargingchange', updateBat);
+  }).catch(() => {
+    set('d-battery', 'UNAVAILABLE');
+    set('d-charging', '--');
+  });
+} else {
+  set('d-battery', 'API UNAVAILABLE');
+  set('d-charging', '--');
+}
+
+// ══════════════════════════════════════════════════════
+// CANVAS FINGERPRINT
+// ══════════════════════════════════════════════════════
+
+(function generateFingerprint() {
+  try {
+    const canvas = document.createElement('canvas');
+    canvas.width = 280; canvas.height = 60;
+    const ctx = canvas.getContext('2d');
+
+    ctx.textBaseline = 'top';
+    ctx.font = '14px Arial';
+    ctx.fillStyle = '#f60';
+    ctx.fillRect(125, 1, 62, 20);
+    ctx.fillStyle = '#069';
+    ctx.fillText('REVEIL//FINGERPRINT', 2, 15);
+    ctx.fillStyle = 'rgba(102,204,0,0.7)';
+    ctx.fillText('REVEIL//FINGERPRINT', 4, 17);
+
+    ctx.beginPath();
+    ctx.arc(50, 50, 25, 0, Math.PI * 2);
+    ctx.fillStyle = 'rgba(255,0,255,0.3)';
+    ctx.fill();
+
+    const data = canvas.toDataURL();
+    let hash = 0;
+    for (let i = 0; i < data.length; i++) {
+      const char = data.charCodeAt(i);
+      hash = ((hash << 5) - hash) + char;
+      hash = hash & hash;
+    }
+    const hex = Math.abs(hash).toString(16).toUpperCase().padStart(8, '0');
+
+    // Format as groups
+    const formatted = hex.match(/.{1,4}/g).join('-');
+    const full = 'RVL-' + formatted + '-' + 
+      Math.abs(hash >> 4).toString(16).toUpperCase().padStart(6,'0');
+
+    document.getElementById('fp-display').textContent = full;
+    document.getElementById('sb-fp').textContent = full.substring(0, 16) + '...';
+  } catch(e) {
+    set('fp-display', 'CANVAS API BLOCKED');
+  }
+})();
+
+// ══════════════════════════════════════════════════════
+// WebRTC LOCAL IP LEAK
+// ══════════════════════════════════════════════════════
+
+(function detectLocalIP() {
+  try {
+    const pc = new RTCPeerConnection({ iceServers: [] });
+    pc.createDataChannel('');
+    pc.createOffer().then(o => pc.setLocalDescription(o));
+    pc.onicecandidate = e => {
+      if (!e || !e.candidate) return;
+      const re = /([0-9]{1,3}(\.[0-9]{1,3}){3}|[a-f0-9]{1,4}(:[a-f0-9]{1,4}){7})/;
+      const match = re.exec(e.candidate.candidate);
+      if (match) {
+        const ip = match[1];
+        if (ip.match(/^(192\.168\.|10\.|172\.(1[6-9]|2\d|3[01]))/)) {
+          set('d-local-ip', ip);
+          pc.close();
+        }
+      }
+    };
+    setTimeout(() => {
+      if (document.getElementById('d-local-ip').textContent === 'SCANNING...') {
+        set('d-local-ip', 'NOT DETECTED');
+      }
+    }, 4000);
+  } catch(e) {
+    set('d-local-ip', 'BLOCKED');
+  }
+})();
+
+// ══════════════════════════════════════════════════════
+// INCOGNITO DETECTION
+// ══════════════════════════════════════════════════════
+
+(async function detectIncognito() {
+  const el = document.getElementById('d-incognito');
+  try {
+    if ('storage' in navigator && 'estimate' in navigator.storage) {
+      const { quota } = await navigator.storage.estimate();
+      // In incognito, quota is typically < 120MB
+      if (quota < 120 * 1024 * 1024) {
+        el.textContent = 'LIKELY YES';
+        el.className = 'data-value warn';
+      } else {
+        el.textContent = 'NO';
+        el.className = 'data-value dim';
+      }
+    } else {
+      el.textContent = 'UNKNOWN';
+    }
+  } catch(e) {
+    el.textContent = 'UNKNOWN';
+  }
+})();
+
+// ══════════════════════════════════════════════════════
+// AD BLOCKER DETECTION
+// ══════════════════════════════════════════════════════
+
+(function detectAdBlock() {
+  const bait = document.createElement('div');
+  bait.className = 'adsbox ads ad-banner';
+  bait.style.cssText = 'width:1px;height:1px;position:absolute;left:-9999px;top:-9999px;';
+  document.body.appendChild(bait);
+  setTimeout(() => {
+    const blocked = !bait.offsetParent || bait.offsetHeight === 0 || bait.offsetWidth === 0;
+    const el = document.getElementById('d-adblock');
+    el.textContent = blocked ? 'DETECTED' : 'NOT DETECTED';
+    el.className = blocked ? 'data-value' : 'data-value warn';
+    bait.remove();
+  }, 200);
+})();
+
+// ══════════════════════════════════════════════════════
+// IP / LOCATION LOOKUP
+// ══════════════════════════════════════════════════════
+
+(async function lookupIP() {
+  try {
+    const res = await fetch('https://ipapi.co/json/');
+    const d = await res.json();
+
+    set('d-ip', d.ip || '--');
+    set('sb-ip', d.ip || '--');
+    set('d-city', (d.city || '--').toUpperCase());
+    set('d-region', (d.region || '--').toUpperCase());
+    set('d-country', (d.country_name || '--').toUpperCase());
+    set('sb-loc', ((d.city || '') + ', ' + (d.country_code || '')).toUpperCase());
+    set('d-isp', (d.org || '--').toUpperCase().replace(/^AS\d+\s+/, ''));
+    set('sb-isp', (d.org || '--').toUpperCase().replace(/^AS\d+\s+/, '').substring(0, 20));
+
+    const lat = d.latitude ? d.latitude.toFixed(4) : '--';
+    const lng = d.longitude ? d.longitude.toFixed(4) : '--';
+    set('d-coords', lat + ',  ' + lng);
+
+    // VPN detection: compare IP timezone vs browser timezone
+    const ipTZ = d.timezone || '';
+    const browserTZ = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    const vpnEl = document.getElementById('d-vpn');
+    if (ipTZ && browserTZ && ipTZ !== browserTZ) {
+      vpnEl.textContent = 'POSSIBLE (' + ipTZ + ' vs ' + browserTZ + ')';
+      vpnEl.className = 'data-value warn';
+    } else {
+      vpnEl.textContent = 'NOT DETECTED';
+      vpnEl.className = 'data-value dim';
+    }
+
+    // Update status bar location
+    document.getElementById('sb-os').textContent = getOS().substring(0, 15);
+    updateSummary(d);
+
+  } catch(e) {
+    set('d-ip', 'LOOKUP FAILED');
+    set('d-city', 'UNAVAILABLE');
+    set('sb-ip', 'ERROR');
+    set('d-vpn', 'UNKNOWN');
+  }
+})();
+
+// ══════════════════════════════════════════════════════
+// INTELLIGENCE SUMMARY + THREAT LEVEL
+// ══════════════════════════════════════════════════════
+
+function updateSummary(geoData) {
+  let threatScore = 0;
+  const factors = [];
+
+  // Check incognito (async, so we read current state)
+  const localIpTxt = document.getElementById('d-local-ip').textContent;
+  const vpnTxt = document.getElementById('d-vpn').textContent;
+  const dntTxt = document.getElementById('d-dnt').textContent;
+  const adblockTxt = document.getElementById('d-adblock').textContent;
+
+  // Geo exposed
+  if (geoData && geoData.city) { threatScore += 2; factors.push('CITY EXPOSED'); }
+
+  // No VPN
+  if (!vpnTxt.includes('POSSIBLE')) { threatScore += 1; factors.push('NO VPN'); }
+
+  // DNT off
+  if (dntTxt === 'OFF' || dntTxt === 'UNSET') { threatScore += 1; factors.push('DNT INACTIVE'); }
+
+  // No ad blocker
+  if (adblockTxt === 'NOT DETECTED') { threatScore += 1; factors.push('NO AD BLOCKER'); }
+
+  // Canvas fingerprint active
+  threatScore += 1; factors.push('FINGERPRINT ACTIVE');
+
+  // Local IP exposed
+  if (localIpTxt !== 'NOT DETECTED' && localIpTxt !== 'BLOCKED') {
+    threatScore += 1; factors.push('LOCAL IP LEAKED');
+  }
+
+  set('sum-identity', factors.slice(0,3).join(' · '));
+
+  const locPrec = (geoData && geoData.city) ? 'CITY-LEVEL (IP DERIVED)' : 'COUNTRY-LEVEL';
+  set('sum-location', locPrec);
+
+  const protections = [];
+  if (vpnTxt.includes('POSSIBLE')) protections.push('VPN');
+  if (adblockTxt === 'DETECTED') protections.push('AD BLOCKER');
+  if (dntTxt === 'ON') protections.push('DNT');
+  set('sum-tracking', protections.length > 0 ? protections.join(' · ') : 'NONE DETECTED');
+
+  // Threat level
+  const levelNames = ['MINIMAL', 'LOW', 'MODERATE', 'ELEVATED', 'HIGH', 'CRITICAL'];
+  const stars = Math.min(5, Math.round(threatScore * 5 / 7));
+  const levelIdx = Math.min(5, Math.round(threatScore * 5 / 7));
+  const levelName = levelNames[levelIdx];
+
+  set('threat-level', levelName);
+  const starsEl = document.getElementById('threat-stars');
+  starsEl.innerHTML = Array.from({length: 5}, (_, i) =>
+    `<span class="${i < stars ? 'threat-star-on' : 'threat-star-off'}">★</span>`
+  ).join('');
+}
+
+// Run summary after 3 seconds to let async checks complete
+setTimeout(() => {
+  const geoData = {};
+  updateSummary(geoData);
+}, 3000);
+
+// ══════════════════════════════════════════════════════
+// INFO MODAL
+// ══════════════════════════════════════════════════════
+
+function openInfo() {
+  document.getElementById('info-modal').classList.add('open');
+}
+function closeInfo() {
+  document.getElementById('info-modal').classList.remove('open');
+}
+document.getElementById('info-modal').addEventListener('click', e => {
+  if (e.target === document.getElementById('info-modal')) closeInfo();
+});
+
+// ══════════════════════════════════════════════════════
+// SCREENSHOT / CAPTURE
+// ══════════════════════════════════════════════════════
+
+async function captureScreen() {
+  const btn = document.getElementById('save-btn');
+  btn.textContent = '[ CAPTURING... ]';
+
+  const script = document.createElement('script');
+  script.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
+  document.head.appendChild(script);
+
+  script.onload = async () => {
+    try {
+      const canvas = await html2canvas(document.getElementById('app'), {
+        backgroundColor: '#000000',
+        scale: 1,
+        useCORS: true,
+        logging: false,
+      });
+
+      // Redact sensitive fields
+      const ctx = canvas.getContext('2d');
+      const redactIds = ['d-ip', 'd-coords', 'd-local-ip'];
+      redactIds.forEach(id => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        const rect = el.getBoundingClientRect();
+        const scaleX = canvas.width / window.innerWidth;
+        const scaleY = canvas.height / (document.getElementById('app').scrollHeight || window.innerHeight);
+        ctx.fillStyle = '#111111';
+        ctx.fillRect(
+          rect.left * scaleX,
+          rect.top * scaleY,
+          rect.width * scaleX,
+          rect.height * scaleY
+        );
+        ctx.fillStyle = '#444444';
+        ctx.font = '10px monospace';
+        ctx.fillText('████████', rect.left * scaleX + 4, (rect.top + rect.height * 0.7) * scaleY);
+      });
+
+      const link = document.createElement('a');
+      const ts = new Date().toISOString().replace(/[:.]/g,'-').substring(0,19);
+      link.download = 'REVEIL_' + ts + '.png';
+      link.href = canvas.toDataURL('image/png');
+      link.click();
+
+      btn.textContent = '[ CAPTURED ]';
+      setTimeout(() => btn.textContent = '[ CAPTURE ]', 2000);
+    } catch(e) {
+      btn.textContent = '[ ERROR ]';
+      setTimeout(() => btn.textContent = '[ CAPTURE ]', 2000);
+    }
+  };
+}
+
+// ══════════════════════════════════════════════════════
+// GLITCH INTRO
+// ══════════════════════════════════════════════════════
+
+(function glitchIntro() {
+  const panels = document.querySelectorAll('.panel');
+  panels.forEach((p, i) => {
+    p.style.opacity = '0';
+    setTimeout(() => {
+      p.style.opacity = '1';
+      p.classList.add('glitch-reveal');
+      setTimeout(() => p.classList.remove('glitch-reveal'), 500);
+    }, 100 + i * 120);
+  });
+})();
+</script>
+</body>
+</html>
