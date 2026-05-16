@@ -235,6 +235,21 @@ body::before {
 #info-x { position: absolute; top: 12px; right: 14px; background: none; border: 1px solid var(--border); color: var(--text-dim); font-family: var(--mono); font-size: 9px; letter-spacing: 2px; padding: 4px 10px; cursor: pointer; transition: all .2s; }
 #info-x:hover { border-color: #fff; color: #fff; }
 
+/* ── TOOLTIP ──────────────────────────────────────────────────── */
+#tip {
+  position: fixed; z-index: 8500; pointer-events: none;
+  max-width: 260px; min-width: 180px;
+  background: #0d0d0d; border: 1px solid rgba(255,255,255,.22);
+  padding: 10px 13px;
+  box-shadow: 0 6px 28px rgba(0,0,0,.85);
+  opacity: 0; transition: opacity .12s;
+}
+#tip.visible { opacity: 1; }
+#tip-title { font-size: 8px; letter-spacing: 3px; color: var(--text-label); padding-bottom: 6px; margin-bottom: 7px; border-bottom: 1px solid var(--border); }
+#tip-body { font-size: 10px; color: #a0a0a0; line-height: 1.75; letter-spacing: .2px; }
+.dl[data-tip] { cursor: help; }
+.dl[data-tip]:hover { color: var(--text-primary); }
+
 /* ── MOBILE ───────────────────────────────────────────────────── */
 #mob { display: none; position: fixed; inset: 0; z-index: 20000; background: var(--bg); flex-direction: column; align-items: center; justify-content: center; padding: 32px; text-align: center; gap: 16px; }
 #mob .logo { font-size: 52px; }
@@ -247,6 +262,9 @@ body::before {
 <body>
 
 <div id="flash"></div>
+
+<!-- TOOLTIP -->
+<div id="tip"><div id="tip-title"></div><div id="tip-body"></div></div>
 
 <!-- MOBILE WALL -->
 <div id="mob">
@@ -1243,6 +1261,105 @@ function closeInfo() { document.getElementById('info-modal').classList.remove('o
 document.getElementById('info-modal').addEventListener('click', e => {
   if(e.target === document.getElementById('info-modal')) closeInfo();
 });
+
+// ══════════════════════════════════════════════════
+// METRIC TOOLTIPS
+// ══════════════════════════════════════════════════
+const TIPS = {
+  // ── Network ────────────────────────────────────
+  'PUBLIC IP': '',
+  'LOCAL IP (WebRTC)': '',
+  'ISP': '',
+  'CONNECTION': '',
+  'VPN / TZ CHECK': '',
+  'REFERRER': '',
+  // ── System Profile ─────────────────────────────
+  'BROWSER': '',
+  'OS / PLATFORM': '',
+  'DEVICE TYPE': '',
+  'SCREEN': '',
+  'CPU CORES': '',
+  'MEMORY (RAM)': '',
+  // ── Device State ───────────────────────────────
+  'BATTERY': '',
+  'CHARGING': '',
+  'LANGUAGE': '',
+  'COLOUR DEPTH': '',
+  'DO NOT TRACK': '',
+  'AD BLOCKER': '',
+  // ── Behavioural ────────────────────────────────
+  'TOTAL CLICKS': '',
+  'CURSOR X / Y': '',
+  'VELOCITY': '',
+  // ── Estimated Location ─────────────────────────
+  'CITY': '',
+  'REGION': '',
+  'COUNTRY': '',
+  'COORDINATES (EST.)': '',
+  'TIMEZONE': '',
+  'SOURCE': '',
+  // ── Privacy State ──────────────────────────────
+  'INCOGNITO MODE': '',
+  'COOKIES ENABLED': '',
+  'LOCAL STORAGE': '',
+  'JS ENABLED': '',
+  'COLOUR SCHEME': '',
+  'REDUCED MOTION': '',
+  // ── Intelligence Notes ─────────────────────────
+  'CANVAS FP': '',
+  'WebRTC LEAK': '',
+  'THREAT STARS': '',
+  // ── Exposure Summary ───────────────────────────
+  'THREAT LEVEL': '',
+  'ACTIVE SIGNALS': '',
+  'LOCATION PREC.': '',
+  'PROTECTIONS': '',
+  // ── Network Environment ────────────────────────
+  'PLATFORM': '',
+  'VENDOR': '',
+  'HARDWARE CONC.': '',
+  'MAX TOUCH PTS': '',
+  'PDF VIEWER': '',
+  'WEBDRIVER': '',
+};
+
+(function() {
+  const tip = document.getElementById('tip');
+  const tipTitle = document.getElementById('tip-title');
+  const tipBody = document.getElementById('tip-body');
+  let raf;
+
+  function place(x, y) {
+    const pad = 16, tw = tip.offsetWidth, th = tip.offsetHeight;
+    const lx = (x + pad + tw > window.innerWidth  - 6) ? x - tw - pad : x + pad;
+    const ly = (y + pad + th > window.innerHeight - 6) ? y - th - pad : y + pad;
+    tip.style.left = lx + 'px';
+    tip.style.top  = ly + 'px';
+  }
+
+  function show(e, key) {
+    tipTitle.textContent = key;
+    tipBody.textContent  = TIPS[key];
+    tip.classList.add('visible');
+    place(e.clientX, e.clientY);
+  }
+
+  function move(e) {
+    cancelAnimationFrame(raf);
+    raf = requestAnimationFrame(() => place(e.clientX, e.clientY));
+  }
+
+  function hide() { tip.classList.remove('visible'); }
+
+  document.querySelectorAll('.dl').forEach(el => {
+    const key = el.textContent.trim();
+    if (!(key in TIPS) || !TIPS[key]) return;
+    el.setAttribute('data-tip', '1');
+    el.addEventListener('mouseenter', e => show(e, key));
+    el.addEventListener('mousemove', move);
+    el.addEventListener('mouseleave', hide);
+  });
+})();
 
 </script>
 </body>
