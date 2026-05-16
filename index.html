@@ -99,8 +99,8 @@ body::before {
 #live-clk { font-size: 11px; color: var(--text-primary); letter-spacing: 2px; }
 .tbtn { background: none; border: 1px solid var(--border-bright); color: var(--text-dim); font-family: var(--mono); font-size: 10px; letter-spacing: 2px; padding: 5px 12px; cursor: pointer; transition: all .2s; white-space: nowrap; }
 .tbtn:hover { border-color: #fff; color: #fff; }
-.ibtn { width: 22px; height: 22px; border: 1px solid var(--border-bright); border-radius: 50%; background: none; color: var(--text-label); font-family: var(--mono); font-size: 11px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all .2s; }
-.ibtn:hover { border-color: #fff; color: #fff; }
+.ibtn { width: 22px; height: 22px; border: 1px solid #fff; border-radius: 50%; background: #fff; color: #000; font-family: var(--mono); font-size: 11px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all .2s; }
+.ibtn:hover { background: none; border-color: var(--border-bright); color: var(--text-label); }
 
 /* ── STATUS BAR ───────────────────────────────────────────────── */
 #statusbar { display: flex; border-bottom: 1px solid var(--border); flex-shrink: 0; }
@@ -222,16 +222,16 @@ body::before {
 #info-modal.open { display: flex; }
 #info-box { max-width: 580px; width: 100%; border: 1px solid var(--border-bright); padding: 40px; background: #050505; position: relative; }
 .info-logo { font-family: var(--display); font-size: 56px; letter-spacing: 10px; color: #fff; margin-bottom: 4px; }
-.info-sub { font-size: 9px; letter-spacing: 3px; color: var(--text-dim); margin-bottom: 32px; }
+.info-sub { font-size: 9px; letter-spacing: 3px; color: var(--text-label); margin-bottom: 32px; }
 .isec { margin-bottom: 24px; }
-.isec-t { font-size: 10px; letter-spacing: 3px; color: var(--text-label); border-bottom: 1px solid var(--border); padding-bottom: 6px; margin-bottom: 10px; }
-.isec p { font-size: 11px; color: var(--text-dim); line-height: 1.9; letter-spacing: .3px; }
+.isec-t { font-size: 10px; letter-spacing: 3px; color: var(--text-primary); border-bottom: 1px solid var(--border); padding-bottom: 6px; margin-bottom: 10px; }
+.isec p { font-size: 11px; color: #a0a0a0; line-height: 1.9; letter-spacing: .3px; }
 .ilink { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--text-label); text-decoration: none; padding: 7px 0; border-bottom: 1px solid var(--border); letter-spacing: 1px; transition: color .2s; }
 .ilink::before { content: '→'; }
 .ilink:hover { color: #fff; }
 .cal { display: flex; flex-direction: column; gap: 4px; margin-top: 24px; padding-top: 20px; border-top: 1px solid var(--border); }
 .cal-n { font-family: var(--display); font-size: 26px; letter-spacing: 5px; color: var(--text-primary); }
-.cal-d { font-size: 12px; color: var(--text-dim); letter-spacing: 1px; line-height: 1.8; }
+.cal-d { font-size: 12px; color: var(--text-label); letter-spacing: 1px; line-height: 1.8; }
 #info-x { position: absolute; top: 12px; right: 14px; background: none; border: 1px solid var(--border); color: var(--text-dim); font-family: var(--mono); font-size: 9px; letter-spacing: 2px; padding: 4px 10px; cursor: pointer; transition: all .2s; }
 #info-x:hover { border-color: #fff; color: #fff; }
 
@@ -361,7 +361,7 @@ body::before {
         <div class="dr"><span class="dl">LOCAL IP (WebRTC)</span><span class="dv warn" id="d-lip">SCANNING...</span></div>
         <div class="dr"><span class="dl">ISP</span><span class="dv" id="d-isp">--</span></div>
         <div class="dr"><span class="dl">CONNECTION</span><span class="dv" id="d-con">--</span></div>
-        <div class="dr"><span class="dl">VPN DETECTED</span><span class="dv" id="d-vpn">CHECKING...</span></div>
+        <div class="dr"><span class="dl">VPN / TZ CHECK</span><span class="dv" id="d-vpn">CHECKING...</span></div>
         <div class="dr"><span class="dl">REFERRER</span><span class="dv dim" id="d-ref">NONE</span></div>
       </div>
     </div>
@@ -455,7 +455,7 @@ body::before {
         <div class="dr"><span class="dl">ACTIVE SIGNALS</span><span class="dv" id="d-sigs" style="font-size:10px;letter-spacing:.5px;">--</span></div>
         <div class="dr"><span class="dl">LOCATION PREC.</span><span class="dv" id="d-locprec" style="font-size:10px;">--</span></div>
         <div class="dr"><span class="dl">PROTECTIONS</span><span class="dv" id="d-prot" style="font-size:10px;">--</span></div>
-        <div style="margin-top:6px;font-size:10px;color:var(--text-dim);letter-spacing:.5px;line-height:1.9;">Every website you visit receives this data automatically. No hacking required. This is how the web works.</div>
+        <div style="margin-top:6px;font-size:10px;color:var(--text-dim);letter-spacing:.5px;line-height:1.9;">Every website you visit receives this data automatically by default.</div>
       </div>
     </div>
 
@@ -501,7 +501,7 @@ body::before {
     <div class="bbl" style="width:14px;height:14px;"></div><div class="bbr" style="width:14px;height:14px;"></div>
     <button id="info-x" onclick="closeInfo()">[ CLOSE ]</button>
     <div class="info-logo">REVEIL</div>
-    <div class="info-sub">re·veil &nbsp;—&nbsp; (1) TO WAKE UP &nbsp; (2) TO REMOVE A VEIL &nbsp; (3) TO REVEAL</div>
+    <div class="info-sub">OLD ENG. (OBS.) — TO MAKE KNOWN · TO CONCEAL AGAIN WITH A VEIL · FR. RÉVEIL — THE AWAKENING</div>
     <div class="isec">
       <div class="isec-t">WHAT IS THIS</div>
       <p>Every data point you see was collected the moment you arrived — no hacking, no phishing, no malware. This is the information your browser broadcasts passively to every website you visit, every day. Reveil simply shows it back to you.</p>
@@ -518,9 +518,7 @@ body::before {
       <a class="ilink" href="https://www.mozilla.org/firefox/" target="_blank">Firefox — privacy-focused browser</a>
     </div>
     <div class="cal">
-      <div class="cal-n">CALUMMA</div>
-      <div class="cal-d">A design studio for rebellious optimists.<br>We work with organisations building a better world.</div>
-      <a href="https://calumma.design" target="_blank" class="ilink" style="margin-top:8px;font-size:9px;">calumma.design</a>
+      <div class="cal-d">Experiment in progress by <a href="https://emilblum.com/" target="_blank" style="color:var(--text-primary);text-decoration:underline;text-underline-offset:3px;letter-spacing:inherit;">Emīl Blūm</a></div>
     </div>
   </div>
 </div>
@@ -1194,7 +1192,7 @@ if(navigator.getBattery) {
     const ipTZ = d.timezone||'', brTZ = Intl.DateTimeFormat().resolvedOptions().timeZone;
     const ve = document.getElementById('d-vpn');
     if(ipTZ && brTZ && ipTZ !== brTZ) { ve.textContent = 'LIKELY ACTIVE'; ve.classList.add('warn'); }
-    else { ve.textContent = 'NOT DETECTED'; ve.classList.add('dim'); }
+    else { ve.textContent = 'UNDETECTED (TZ MATCH)'; ve.classList.add('dim'); }
 
     // Update map with real coordinates
     if(d.latitude && d.longitude) updateMap(d.latitude, d.longitude);
@@ -1214,7 +1212,7 @@ function updateSummary() {
   const gCity = document.getElementById('d-city').textContent;
   if(gCity && gCity !== '--') { score+=2; sigs.push('CITY EXPOSED'); }
   const vpn = document.getElementById('d-vpn').textContent;
-  if(!vpn.includes('LIKELY')) { score+=1; sigs.push('NO VPN'); }
+  if(!vpn.includes('LIKELY')) { score+=1; sigs.push('NO TZ MISMATCH'); }
   if(document.getElementById('d-dnt').textContent !== 'ENABLED') { score+=1; sigs.push('DNT OFF'); }
   if(document.getElementById('d-adb').textContent === 'NOT DETECTED') { score+=1; sigs.push('NO ADBLOCKER'); }
   score += 1; sigs.push('FP ACTIVE');
