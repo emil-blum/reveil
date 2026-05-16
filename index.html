@@ -187,8 +187,8 @@ body::before {
 }
 .fw-title { font-size: 7px; letter-spacing: 3px; color: var(--text-label); }
 .fw-controls { display: flex; gap: 6px; align-items: center; }
-.fw-btn { background: none; border: 1px solid var(--border); color: var(--text-dim); font-family: var(--mono); font-size: 10px; letter-spacing: 1px; padding: 1px 6px; cursor: pointer; transition: all .15s; }
-.fw-btn:hover { border-color: var(--text-primary); color: var(--text-bright); }
+.fw-btn { background: none; border: 1px solid rgba(255,255,255,.6); color: rgba(255,255,255,.6); font-family: var(--mono); font-size: 10px; letter-spacing: 1px; padding: 1px 6px; cursor: pointer; transition: all .15s; }
+.fw-btn:hover { background: #fff; border-color: #fff; color: #000; }
 .fw-body { position: relative; flex: 1; min-height: 0; }
 
 /* Camera window */
@@ -235,6 +235,19 @@ body::before {
 #info-x { position: absolute; top: 12px; right: 14px; background: none; border: 1px solid var(--border); color: var(--text-dim); font-family: var(--mono); font-size: 9px; letter-spacing: 2px; padding: 4px 10px; cursor: pointer; transition: all .2s; }
 #info-x:hover { border-color: #fff; color: #fff; }
 
+/* ── ENABLE BUTTONS ───────────────────────────────────────────── */
+#btn-cam, #btn-aud { border-color: #fff; color: #fff; }
+#btn-cam:hover, #btn-aud:hover { background: #fff; color: #000; border-color: #fff; }
+
+/* ── WINDOW INFO OVERLAY ──────────────────────────────────────── */
+#win-info { display: none; position: fixed; inset: 0; z-index: 9400; background: rgba(0,0,0,.9); overflow-y: auto; padding: 40px 20px; align-items: flex-start; justify-content: center; }
+#win-info.open { display: flex; }
+#win-info-box { max-width: 480px; width: 100%; border: 1px solid var(--border-bright); padding: 32px; background: #050505; position: relative; margin-top: 40px; }
+#win-info-title { font-family: var(--display); font-size: 38px; letter-spacing: 8px; color: #fff; margin-bottom: 6px; }
+#win-info-sub { font-size: 9px; letter-spacing: 3px; color: var(--text-label); margin-bottom: 28px; }
+#win-info-x { position: absolute; top: 12px; right: 14px; background: none; border: 1px solid var(--border); color: var(--text-dim); font-family: var(--mono); font-size: 9px; letter-spacing: 2px; padding: 4px 10px; cursor: pointer; transition: all .2s; }
+#win-info-x:hover { border-color: #fff; color: #fff; }
+
 /* ── TOOLTIP ──────────────────────────────────────────────────── */
 #tip {
   position: fixed; z-index: 8500; pointer-events: none;
@@ -279,23 +292,14 @@ body::before {
 <div id="loading-screen">
   <div class="ls-logo">REVEIL</div>
   <div id="ls-term"></div>
-  <div id="ls-perm">
-    <div class="ls-perm-lbl">SENSOR ACCESS REQUIRED TO PROCEED</div>
-    <button id="ls-grant" onclick="reqPerms()">[ GRANT CAMERA + MICROPHONE ]</button>
-    <button id="ls-skip" onclick="skipPerms()">continue without camera / mic →</button>
-  </div>
-  <div id="ls-prog">
-    <div class="ls-prog-lbl">LOADING NEURAL DETECTION MODELS</div>
-    <div class="ls-bar-o"><div class="ls-bar-i" id="ls-bar"></div></div>
-    <div id="ls-pct">0%</div>
-  </div>
 </div>
 
 <!-- FLOATING CAMERA WINDOW -->
-<div class="float-win" id="cam-win">
+<div class="float-win" id="cam-win" style="display:none">
   <div class="fw-bar" id="cam-bar">
     <span class="fw-title">BIOMETRIC CAPTURE</span>
     <div class="fw-controls">
+      <button class="fw-btn" onclick="openWinInfo('cam')">i</button>
       <button class="fw-btn" onclick="toggleHide('cam-win')">✕</button>
     </div>
   </div>
@@ -321,10 +325,11 @@ body::before {
 </div>
 
 <!-- FLOATING AUDIO WINDOW -->
-<div class="float-win" id="aud-win">
+<div class="float-win" id="aud-win" style="display:none">
   <div class="fw-bar" id="aud-bar">
     <span class="fw-title">AUDIO FREQUENCY — MIC INPUT</span>
     <div class="fw-controls">
+      <button class="fw-btn" onclick="openWinInfo('aud')">i</button>
       <button class="fw-btn" onclick="toggleHide('aud-win')">✕</button>
     </div>
   </div>
@@ -351,8 +356,8 @@ body::before {
         <div class="sig"><div class="dot" id="dot-ai"></div>FACE·AI</div>
       </div>
       <div id="live-clk">--:--:--</div>
-      <button class="tbtn" id="btn-cam" onclick="showWin('cam-win')" style="display:none;">[ CAMERA ]</button>
-      <button class="tbtn" id="btn-aud" onclick="showWin('aud-win')" style="display:none;">[ AUDIO ]</button>
+      <button class="tbtn" id="btn-cam" onclick="handleCamBtn()">[ ENABLE CAMERA ]</button>
+      <button class="tbtn" id="btn-aud" onclick="handleAudBtn()">[ ENABLE AUDIO ]</button>
       <button class="ibtn" onclick="openInfo()">i</button>
     </div>
   </div>
@@ -512,6 +517,18 @@ body::before {
   </div><!-- /grid -->
 </div><!-- /app -->
 
+<!-- WINDOW INFO OVERLAY -->
+<div id="win-info">
+  <div id="win-info-box">
+    <div class="btl" style="width:14px;height:14px;"></div><div class="btr" style="width:14px;height:14px;"></div>
+    <div class="bbl" style="width:14px;height:14px;"></div><div class="bbr" style="width:14px;height:14px;"></div>
+    <button id="win-info-x" onclick="closeWinInfo()">[ CLOSE ]</button>
+    <div id="win-info-title"></div>
+    <div id="win-info-sub"></div>
+    <div id="win-info-content"></div>
+  </div>
+</div>
+
 <!-- INFO MODAL -->
 <div id="info-modal">
   <div id="info-box">
@@ -611,52 +628,23 @@ async function boot() {
   await addLn('BROWSER ENVIRONMENT PROFILED', false, 800);
   await addLn('CANVAS FINGERPRINT GENERATED', false, 1200);
   await addLn('IP RESOLUTION PENDING...', false, 1600);
-  await addLn('REQUESTING SENSOR ACCESS', true, 2100);
-  setTimeout(() => { document.getElementById('ls-perm').style.display = 'flex'; }, 2500);
+  await addLn('PASSIVE SURVEILLANCE ACTIVE', true, 2100);
+  setTimeout(launch, 2600);
 }
 boot();
 
-async function reqPerms() {
-  document.getElementById('ls-perm').style.display = 'none';
-  await addLn('SENSOR ACCESS REQUESTED...', false, 0);
-  try {
-    const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-    S.cam = true; S.mic = true; window._stream = stream;
-    await addLn('CAMERA ACCESS: GRANTED', true, 200);
-    await addLn('MICROPHONE ACCESS: GRANTED', true, 500);
-    await loadModels();
-  } catch(e) {
-    await addLn('ACCESS DENIED — PASSIVE MODE ONLY', false, 200);
-    setTimeout(launch, 1200);
-  }
-}
-
-function skipPerms() {
-  document.getElementById('ls-perm').style.display = 'none';
-  addLn('PASSIVE MODE — SENSORS NOT ACTIVE', false, 0);
-  setTimeout(launch, 1000);
-}
-
-async function loadModels() {
-  await addLn('LOADING NEURAL DETECTION MODELS...', false, 300);
-  document.getElementById('ls-prog').style.display = 'block';
-  const bar = document.getElementById('ls-bar');
-  const pct = document.getElementById('ls-pct');
-  const upd = p => { bar.style.width = p + '%'; pct.textContent = Math.round(p) + '%'; };
+async function loadModels(onStatus) {
   const BASE = '/weights';
   try {
-    upd(8);  await faceapi.nets.tinyFaceDetector.loadFromUri(BASE);
-    upd(32); await faceapi.nets.faceLandmark68TinyNet.loadFromUri(BASE);
-    upd(60); await faceapi.nets.faceExpressionNet.loadFromUri(BASE);
-    upd(86); await faceapi.nets.ageGenderNet.loadFromUri(BASE);
-    upd(100); S.ai = true;
-    await addLn('NEURAL MODELS LOADED — 4/4', true, 300);
-    await addLn('CALIBRATING BIOMETRIC SENSORS...', false, 700);
-    await addLn('SURVEILLANCE PROTOCOL ACTIVE', true, 1100);
-    setTimeout(launch, 1600);
+    if (onStatus) onStatus('LOADING...');
+    await faceapi.nets.tinyFaceDetector.loadFromUri(BASE);
+    await faceapi.nets.faceLandmark68TinyNet.loadFromUri(BASE);
+    await faceapi.nets.faceExpressionNet.loadFromUri(BASE);
+    await faceapi.nets.ageGenderNet.loadFromUri(BASE);
+    S.ai = true;
+    if (onStatus) onStatus('AI READY');
   } catch(e) {
-    await addLn('MODEL LOAD ERROR — CAMERA ACTIVE WITHOUT AI', false, 300);
-    setTimeout(launch, 1200);
+    if (onStatus) onStatus('AI ERROR');
   }
 }
 
@@ -676,8 +664,6 @@ function launch() {
   });
   setTimeout(() => {
     ls.style.display = 'none';
-    initCam();
-    initAudio();
     initMap();
   }, 500);
 }
@@ -686,9 +672,9 @@ function launch() {
 // CAMERA + 2D HALFTONE + FACE API
 // ══════════════════════════════════════════════════
 function initCam() {
-  if (!S.cam || !window._stream) return;
+  if (!S.cam || !window._camStream) return;
   const vid = document.getElementById('cam-vid');
-  vid.srcObject = window._stream;
+  vid.srcObject = window._camStream;
   vid.play();
   document.getElementById('cam-nov').style.display = 'none';
   document.getElementById('dot-cam').classList.add('alert');
@@ -877,11 +863,11 @@ function extractSegs(vid, lm) {
 // AUDIO WAVEFORM
 // ══════════════════════════════════════════════════
 function initAudio() {
-  if (!S.mic || !window._stream) return;
+  if (!S.mic || !window._audStream) return;
   document.getElementById('aud-nov').style.display = 'none';
   document.getElementById('dot-aud').classList.add('live');
   const actx = new (window.AudioContext || window.webkitAudioContext)();
-  const src = actx.createMediaStreamSource(window._stream);
+  const src = actx.createMediaStreamSource(window._audStream);
   const an = actx.createAnalyser();
   an.fftSize = 1024; an.smoothingTimeConstant = 0.82;
   src.connect(an);
@@ -976,6 +962,103 @@ function updateMap(lat, lng) {
   S.map.setView([lat, lng], 11, { animate: true, duration: 2.5 });
   S.mapMarker.setLatLng([lat, lng]);
 }
+
+// ══════════════════════════════════════════════════
+// ENABLE CAMERA / AUDIO
+// ══════════════════════════════════════════════════
+async function enableCam() {
+  const btn = document.getElementById('btn-cam');
+  btn.disabled = true;
+  btn.textContent = '[ REQUESTING... ]';
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+    S.cam = true;
+    window._camStream = stream;
+    await loadModels(status => { btn.textContent = '[ ' + status + ' ]'; });
+    btn.textContent = '[ CAMERA ]';
+    btn.disabled = false;
+    showWin('cam-win');
+    initCam();
+  } catch(e) {
+    btn.textContent = '[ ENABLE CAMERA ]';
+    btn.disabled = false;
+  }
+}
+
+async function enableAudio() {
+  const btn = document.getElementById('btn-aud');
+  btn.disabled = true;
+  btn.textContent = '[ REQUESTING... ]';
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+    S.mic = true;
+    window._audStream = stream;
+    btn.textContent = '[ AUDIO ]';
+    btn.disabled = false;
+    showWin('aud-win');
+    initAudio();
+  } catch(e) {
+    btn.textContent = '[ ENABLE AUDIO ]';
+    btn.disabled = false;
+  }
+}
+
+function handleCamBtn() { if (S.cam) showWin('cam-win'); else enableCam(); }
+function handleAudBtn() { if (S.mic) showWin('aud-win'); else enableAudio(); }
+
+// ══════════════════════════════════════════════════
+// WINDOW INFO OVERLAY
+// ══════════════════════════════════════════════════
+const WIN_INFO = {
+  cam: {
+    title: 'BIOMETRIC CAPTURE',
+    sub: 'LOCAL PROCESSING · FACE-API.JS · NO DATA TRANSMITTED',
+    html: `<div class="isec">
+  <div class="isec-t">WHAT IT DOES</div>
+  <p>Your camera stream is processed entirely on this device using face-api.js, a neural network library running in your browser. No video frames, facial geometry, or biometric data ever leave your device. The only thing transmitted is nothing.</p>
+</div>
+<div class="isec">
+  <div class="isec-t">WHAT IT DETECTS</div>
+  <p>The same signals extracted by commercial facial recognition systems: estimated age, inferred gender, dominant emotional expression, and 68 facial landmark coordinates — the precise geometry of your eyes, nose, mouth, and jawline. These landmarks are the input layer for identity matching systems used in law enforcement, border control, and consumer advertising platforms.</p>
+</div>
+<div class="isec">
+  <div class="isec-t">WHY IT MATTERS</div>
+  <p>Facial recognition is deployed in retail environments, public transport, and social media platforms — often without disclosure. The halftone render is deliberate: it makes the act of surveillance visible without making the footage useful. The system demonstrates what is technically possible with a standard browser and no special permissions beyond camera access.</p>
+</div>
+<a class="ilink" href="https://github.com/justadudewhohacks/face-api.js" target="_blank">face-api.js — open source face recognition library</a>
+<a class="ilink" href="https://www.eff.org/issues/face-recognition" target="_blank">EFF — face recognition and civil liberties</a>`
+  },
+  aud: {
+    title: 'AUDIO FREQUENCY',
+    sub: 'WEB AUDIO API · LOCAL PROCESSING · MIC INPUT',
+    html: `<div class="isec">
+  <div class="isec-t">WHAT IT DOES</div>
+  <p>Your microphone input is analysed in real-time using the Web Audio API. The waveform and frequency bars visualise the raw audio signal. No audio is recorded, stored, or transmitted — all processing happens locally in your browser.</p>
+</div>
+<div class="isec">
+  <div class="isec-t">WHAT THE SIGNAL REVEALS</div>
+  <p>Audio captured in commercial contexts is routinely processed for Automatic Content Recognition — identifying TV programmes or advertisements you're watching from ambient sound. ACR is built into smart TVs, mobile apps, and voice assistants by default, and its output is sold to advertisers to correlate screen viewing with ad targeting profiles. Some platforms have been documented using microphone access granted for one purpose to enable ambient audio monitoring for another.</p>
+</div>
+<div class="isec">
+  <div class="isec-t">AUDIO FINGERPRINTING</div>
+  <p>Separately from content recognition, the Web Audio API's AudioContext can fingerprint your device without microphone access — subtle differences in how your hardware processes audio produce a unique signature per device. This is a passive tracking technique that operates independently of whether you grant mic permission.</p>
+</div>
+<a class="ilink" href="https://developer.mozilla.org/en-US/docs/Web/API/Web_Audio_API" target="_blank">MDN — Web Audio API reference</a>
+<a class="ilink" href="https://www.eff.org/issues/privacy" target="_blank">EFF — audio surveillance and digital privacy</a>`
+  }
+};
+
+function openWinInfo(key) {
+  const data = WIN_INFO[key]; if (!data) return;
+  document.getElementById('win-info-title').textContent = data.title;
+  document.getElementById('win-info-sub').textContent = data.sub;
+  document.getElementById('win-info-content').innerHTML = data.html;
+  document.getElementById('win-info').classList.add('open');
+}
+function closeWinInfo() { document.getElementById('win-info').classList.remove('open'); }
+document.getElementById('win-info').addEventListener('click', e => {
+  if (e.target === document.getElementById('win-info')) closeWinInfo();
+});
 
 // ══════════════════════════════════════════════════
 // CLOCK
