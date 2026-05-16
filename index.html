@@ -17,7 +17,7 @@
   --panel-bg: #070707;
   --border: #1e1e1e;
   --border-bright: #3a3a3a;
-  --text-primary: #d0d0d0;
+  --text-primary: #ffffff;
   --text-dim: #4a4a4a;
   --text-label: #777777;
   --text-bright: #ffffff;
@@ -61,22 +61,22 @@ body::before {
 #loading-screen.hidden { opacity: 0; pointer-events: none; }
 .ls-logo { font-family: var(--display); font-size: 80px; letter-spacing: 14px; color: #fff; margin-bottom: 32px; animation: lsPulse 3s ease infinite; }
 @keyframes lsPulse { 0%,100%{opacity:1} 50%{opacity:.6} }
-#ls-term { width: 460px; max-width: 90vw; font-size: 10px; color: var(--text-dim); letter-spacing: 1.5px; line-height: 2.2; }
+#ls-term { width: 460px; max-width: 90vw; font-size: 12px; color: var(--text-dim); letter-spacing: 1.5px; line-height: 2.2; }
 #ls-term .ln { opacity: 0; animation: fadeIn .1s forwards; }
 #ls-term .ln::before { content: '> '; color: var(--text-label); }
 #ls-term .ln.hi { color: var(--text-primary); }
 @keyframes fadeIn { to { opacity: 1; } }
 #ls-perm { margin-top: 28px; display: none; flex-direction: column; align-items: center; gap: 14px; }
-.ls-perm-lbl { font-size: 8px; letter-spacing: 3px; color: var(--text-dim); text-align: center; }
-#ls-grant { border: 1px solid var(--border-bright); background: none; color: var(--text-primary); font-family: var(--mono); font-size: 10px; letter-spacing: 3px; padding: 10px 30px; cursor: pointer; transition: all .2s; }
+.ls-perm-lbl { font-size: 10px; letter-spacing: 3px; color: var(--text-dim); text-align: center; }
+#ls-grant { border: 1px solid var(--border-bright); background: none; color: var(--text-primary); font-family: var(--mono); font-size: 12px; letter-spacing: 3px; padding: 10px 30px; cursor: pointer; transition: all .2s; }
 #ls-grant:hover { border-color: #fff; color: #fff; background: rgba(255,255,255,.02); }
-#ls-skip { background: none; border: none; color: var(--text-dim); font-family: var(--mono); font-size: 8px; letter-spacing: 2px; cursor: pointer; text-decoration: underline; padding: 3px; }
+#ls-skip { background: none; border: none; color: var(--text-dim); font-family: var(--mono); font-size: 10px; letter-spacing: 2px; cursor: pointer; text-decoration: underline; padding: 3px; }
 #ls-skip:hover { color: var(--text-label); }
 #ls-prog { margin-top: 24px; display: none; width: 400px; max-width: 90vw; }
-.ls-prog-lbl { font-size: 8px; letter-spacing: 2px; color: var(--text-dim); margin-bottom: 8px; }
+.ls-prog-lbl { font-size: 10px; letter-spacing: 2px; color: var(--text-dim); margin-bottom: 8px; }
 .ls-bar-o { height: 2px; background: var(--border); }
 .ls-bar-i { height: 100%; background: var(--text-primary); width: 0%; transition: width .3s; }
-#ls-pct { font-size: 10px; color: var(--text-primary); letter-spacing: 2px; margin-top: 6px; }
+#ls-pct { font-size: 12px; color: var(--text-primary); letter-spacing: 2px; margin-top: 6px; }
 
 /* ── APP SHELL ────────────────────────────────────────────────── */
 #app { width: 100vw; height: 100vh; display: flex; flex-direction: column; overflow: hidden; opacity: 0; transition: opacity .8s; }
@@ -89,22 +89,22 @@ body::before {
   background: var(--bg); flex-shrink: 0; z-index: 200;
 }
 .logo { font-family: var(--display); font-size: 32px; color: #fff; letter-spacing: 8px; line-height: 1; }
-.tagline { font-size: 8px; color: var(--text-dim); letter-spacing: 2px; line-height: 1.8; }
+.tagline { font-size: 10px; color: var(--text-dim); letter-spacing: 2px; line-height: 1.8; }
 #topbar-right { display: flex; align-items: center; gap: 16px; }
 .sigs { display: flex; gap: 10px; align-items: center; }
-.sig { font-size: 8px; color: var(--text-dim); letter-spacing: 1.5px; display: flex; align-items: center; gap: 4px; }
+.sig { font-size: 10px; color: var(--text-dim); letter-spacing: 1.5px; display: flex; align-items: center; gap: 4px; }
 .dot { width: 5px; height: 5px; border-radius: 50%; background: #1a1a1a; }
 .dot.live { background: var(--text-primary); animation: blink 2s infinite; }
 .dot.alert { background: var(--warning); animation: blink .8s infinite; }
 #live-clk { font-size: 11px; color: var(--text-primary); letter-spacing: 2px; }
-.tbtn { background: none; border: 1px solid var(--border-bright); color: var(--text-dim); font-family: var(--mono); font-size: 8px; letter-spacing: 2px; padding: 5px 12px; cursor: pointer; transition: all .2s; white-space: nowrap; }
+.tbtn { background: none; border: 1px solid var(--border-bright); color: var(--text-dim); font-family: var(--mono); font-size: 10px; letter-spacing: 2px; padding: 5px 12px; cursor: pointer; transition: all .2s; white-space: nowrap; }
 .tbtn:hover { border-color: #fff; color: #fff; }
 .ibtn { width: 22px; height: 22px; border: 1px solid var(--border-bright); border-radius: 50%; background: none; color: var(--text-label); font-family: var(--mono); font-size: 11px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all .2s; }
 .ibtn:hover { border-color: #fff; color: #fff; }
 
 /* ── STATUS BAR ───────────────────────────────────────────────── */
 #statusbar { display: flex; border-bottom: 1px solid var(--border); flex-shrink: 0; }
-.si { flex: 1; padding: 4px 12px; border-right: 1px solid var(--border); font-size: 8px; letter-spacing: 1.5px; color: var(--text-dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.si { flex: 1; padding: 4px 12px; border-right: 1px solid var(--border); font-size: 10px; letter-spacing: 1.5px; color: var(--text-dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .si:last-child { border-right: none; }
 .si span { color: var(--text-primary); }
 
@@ -122,7 +122,7 @@ body::before {
 .panel { background: var(--panel-bg); display: flex; flex-direction: column; position: relative; overflow: hidden; min-height: 0; }
 .panel::after { content: ''; position: absolute; inset: 0; background: linear-gradient(135deg, rgba(255,255,255,.006) 0%, transparent 60%); pointer-events: none; }
 .ph { display: flex; align-items: center; justify-content: space-between; padding: 6px 12px; border-bottom: 1px solid var(--border); background: rgba(255,255,255,.015); flex-shrink: 0; }
-.pt { font-size: 8px; letter-spacing: 3px; color: var(--text-label); }
+.pt { font-size: 10px; letter-spacing: 3px; color: var(--text-label); }
 .pid { font-size: 7px; color: var(--border-bright); letter-spacing: 1px; }
 .pb { flex: 1; padding: 12px; display: flex; flex-direction: column; gap: 7px; overflow: hidden; min-height: 0; }
 
@@ -136,8 +136,8 @@ body::before {
 /* Data rows */
 .dr { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; border-bottom: 1px solid rgba(255,255,255,.025); padding-bottom: 6px; flex-shrink: 0; }
 .dr:last-child { border-bottom: none; padding-bottom: 0; }
-.dl { font-size: 8px; letter-spacing: 2px; color: var(--text-dim); white-space: nowrap; flex-shrink: 0; }
-.dv { font-size: 10px; color: var(--text-primary); text-align: right; word-break: break-all; letter-spacing: .5px; }
+.dl { font-size: 10px; letter-spacing: 2px; color: var(--text-dim); white-space: nowrap; flex-shrink: 0; }
+.dv { font-size: 12px; color: var(--text-primary); text-align: right; word-break: break-all; letter-spacing: .5px; }
 .dv.lg { font-family: var(--display); font-size: 22px; color: #fff; line-height: 1; }
 .dv.warn { color: var(--warning); }
 .dv.dim { color: var(--text-dim); }
@@ -187,23 +187,23 @@ body::before {
 }
 .fw-title { font-size: 7px; letter-spacing: 3px; color: var(--text-label); }
 .fw-controls { display: flex; gap: 6px; align-items: center; }
-.fw-btn { background: none; border: 1px solid var(--border); color: var(--text-dim); font-family: var(--mono); font-size: 8px; letter-spacing: 1px; padding: 1px 6px; cursor: pointer; transition: all .15s; }
+.fw-btn { background: none; border: 1px solid var(--border); color: var(--text-dim); font-family: var(--mono); font-size: 10px; letter-spacing: 1px; padding: 1px 6px; cursor: pointer; transition: all .15s; }
 .fw-btn:hover { border-color: var(--text-primary); color: var(--text-bright); }
 .fw-body { position: relative; flex: 1; min-height: 0; }
 
 /* Camera window */
-#cam-win { width: 500px; top: 70px; left: 20px; }
-#cam-win .fw-body { height: 316px; background: #000; }
+#cam-win { width: 500px; height: 460px; top: 70px; left: 20px; }
+#cam-win .fw-body { background: #000; }
 #cam-vid { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; filter: grayscale(1) contrast(1.2); display: block; }
 #cam-ht { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
 #cam-face { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
-#cam-nov { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 8px; letter-spacing: 3px; color: var(--text-dim); }
+#cam-nov { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 10px; letter-spacing: 3px; color: var(--text-dim); }
 .scan-line { position: absolute; left: 0; right: 0; height: 2px; background: linear-gradient(90deg, transparent, rgba(255,255,255,.1), transparent); animation: scanD 3s linear infinite; pointer-events: none; }
 @keyframes scanD { from{top:0} to{top:100%} }
 #rec-ind { position: absolute; top: 7px; left: 8px; font-size: 7px; letter-spacing: 2px; color: var(--text-dim); display: flex; align-items: center; gap: 4px; z-index: 10; pointer-events: none; }
 #rec-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--warning); animation: blink 1s infinite; display: none; }
 #face-tags { position: absolute; top: 6px; right: 6px; display: flex; flex-direction: column; gap: 3px; z-index: 10; pointer-events: none; }
-.ftag { font-size: 10px; letter-spacing: 1px; color: #fff; background: #000; border: 1px solid rgba(255,255,255,.1); padding: 2px 6px; white-space: nowrap; }
+.ftag { font-size: 12px; letter-spacing: 1px; color: #fff; background: #000; border: 1px solid rgba(255,255,255,.1); padding: 2px 6px; white-space: nowrap; }
 
 /* Face sub-panels under camera */
 #face-subs { display: flex; gap: 1px; height: 120px; background: var(--border); flex-shrink: 0; }
@@ -224,14 +224,14 @@ body::before {
 .info-logo { font-family: var(--display); font-size: 56px; letter-spacing: 10px; color: #fff; margin-bottom: 4px; }
 .info-sub { font-size: 9px; letter-spacing: 3px; color: var(--text-dim); margin-bottom: 32px; }
 .isec { margin-bottom: 24px; }
-.isec-t { font-size: 8px; letter-spacing: 3px; color: var(--text-label); border-bottom: 1px solid var(--border); padding-bottom: 6px; margin-bottom: 10px; }
+.isec-t { font-size: 10px; letter-spacing: 3px; color: var(--text-label); border-bottom: 1px solid var(--border); padding-bottom: 6px; margin-bottom: 10px; }
 .isec p { font-size: 11px; color: var(--text-dim); line-height: 1.9; letter-spacing: .3px; }
-.ilink { display: flex; align-items: center; gap: 8px; font-size: 10px; color: var(--text-label); text-decoration: none; padding: 7px 0; border-bottom: 1px solid var(--border); letter-spacing: 1px; transition: color .2s; }
+.ilink { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--text-label); text-decoration: none; padding: 7px 0; border-bottom: 1px solid var(--border); letter-spacing: 1px; transition: color .2s; }
 .ilink::before { content: '→'; }
 .ilink:hover { color: #fff; }
 .cal { display: flex; flex-direction: column; gap: 4px; margin-top: 24px; padding-top: 20px; border-top: 1px solid var(--border); }
 .cal-n { font-family: var(--display); font-size: 26px; letter-spacing: 5px; color: var(--text-primary); }
-.cal-d { font-size: 10px; color: var(--text-dim); letter-spacing: 1px; line-height: 1.8; }
+.cal-d { font-size: 12px; color: var(--text-dim); letter-spacing: 1px; line-height: 1.8; }
 #info-x { position: absolute; top: 12px; right: 14px; background: none; border: 1px solid var(--border); color: var(--text-dim); font-family: var(--mono); font-size: 9px; letter-spacing: 2px; padding: 4px 10px; cursor: pointer; transition: all .2s; }
 #info-x:hover { border-color: #fff; color: #fff; }
 
@@ -400,7 +400,7 @@ body::before {
       <div class="ph"><span class="pt">BEHAVIOURAL TRACKING</span><span class="pid">SIG/BEH-04</span></div>
       <div class="pb" style="align-items:center;justify-content:center;">
         <div id="timer-d">00:00:00</div>
-        <div style="font-size:8px;letter-spacing:3px;color:var(--text-dim);margin-top:4px;">TIME OBSERVED</div>
+        <div style="font-size:10px;letter-spacing:3px;color:var(--text-dim);margin-top:4px;">TIME OBSERVED</div>
         <div style="width:100%;margin-top:12px;display:flex;flex-direction:column;gap:7px;">
           <div class="dr"><span class="dl">TOTAL CLICKS</span><span class="dv lg" id="d-clk">0</span></div>
           <div class="dr"><span class="dl">CURSOR X / Y</span><span class="dv" id="d-mxy">0 / 0</span></div>
@@ -419,7 +419,7 @@ body::before {
         <div class="dr"><span class="dl">COUNTRY</span><span class="dv" id="d-country">--</span></div>
         <div class="dr"><span class="dl">COORDINATES (EST.)</span><span class="dv warn" id="d-crd">--</span></div>
         <div class="dr"><span class="dl">TIMEZONE</span><span class="dv" id="d-tz">--</span></div>
-        <div class="dr"><span class="dl">SOURCE</span><span class="dv dim" style="font-size:8px;">IP ROUTING</span></div>
+        <div class="dr"><span class="dl">SOURCE</span><span class="dv dim" style="font-size:10px;">IP ROUTING</span></div>
       </div>
     </div>
 
@@ -441,7 +441,7 @@ body::before {
       <div class="ph"><span class="pt">CANVAS FINGERPRINT</span><span class="pid">SIG/FP-07</span></div>
       <div class="pb">
         <div id="fp-block">GENERATING...</div>
-        <div style="font-size:8px;color:var(--text-dim);letter-spacing:.5px;line-height:1.8;margin-top:8px;">
+        <div style="font-size:10px;color:var(--text-dim);letter-spacing:.5px;line-height:1.8;margin-top:8px;">
           Generated from how your GPU renders graphics. Unique to this device + browser combination. Cannot be cleared by deleting cookies or using private browsing.
         </div>
       </div>
@@ -452,10 +452,10 @@ body::before {
       <div class="ph"><span class="pt">EXPOSURE SUMMARY</span><span class="pid">SIG/SUM-08</span></div>
       <div class="pb">
         <div class="dr"><span class="dl">THREAT LEVEL</span><span class="dv lg" id="d-thr">--</span></div>
-        <div class="dr"><span class="dl">ACTIVE SIGNALS</span><span class="dv" id="d-sigs" style="font-size:8px;letter-spacing:.5px;">--</span></div>
-        <div class="dr"><span class="dl">LOCATION PREC.</span><span class="dv" id="d-locprec" style="font-size:8px;">--</span></div>
-        <div class="dr"><span class="dl">PROTECTIONS</span><span class="dv" id="d-prot" style="font-size:8px;">--</span></div>
-        <div style="margin-top:6px;font-size:8px;color:var(--text-dim);letter-spacing:.5px;line-height:1.9;">Every website you visit receives this data automatically. No hacking required. This is how the web works.</div>
+        <div class="dr"><span class="dl">ACTIVE SIGNALS</span><span class="dv" id="d-sigs" style="font-size:10px;letter-spacing:.5px;">--</span></div>
+        <div class="dr"><span class="dl">LOCATION PREC.</span><span class="dv" id="d-locprec" style="font-size:10px;">--</span></div>
+        <div class="dr"><span class="dl">PROTECTIONS</span><span class="dv" id="d-prot" style="font-size:10px;">--</span></div>
+        <div style="margin-top:6px;font-size:10px;color:var(--text-dim);letter-spacing:.5px;line-height:1.9;">Every website you visit receives this data automatically. No hacking required. This is how the web works.</div>
       </div>
     </div>
 
@@ -465,7 +465,7 @@ body::before {
       <div class="ph"><span class="pt">INTELLIGENCE NOTES</span><span class="pid">SIG/INT-09</span></div>
       <div class="pb">
         <div class="dr"><span class="dl">PUBLIC IP</span><span class="dv warn" id="d-ip2">--</span></div>
-        <div class="dr"><span class="dl">CANVAS FP</span><span class="dv" id="d-fp2" style="font-size:8px;letter-spacing:1px;">--</span></div>
+        <div class="dr"><span class="dl">CANVAS FP</span><span class="dv" id="d-fp2" style="font-size:10px;letter-spacing:1px;">--</span></div>
         <div class="dr"><span class="dl">WebRTC LEAK</span><span class="dv warn" id="d-lip2">--</span></div>
         <div class="dr"><span class="dl">THREAT STARS</span><span class="dv" id="d-stars" style="letter-spacing:3px;">☆☆☆☆☆</span></div>
       </div>
