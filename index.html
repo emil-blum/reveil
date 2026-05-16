@@ -537,6 +537,7 @@ body::before {
     </div>
     <div class="cal">
       <div class="cal-d">Experiment in progress by <a href="https://emilblum.com/" target="_blank" style="color:var(--text-primary);text-decoration:underline;text-underline-offset:3px;letter-spacing:inherit;">Emīl Blūm</a></div>
+      <div style="font-size:9px;color:var(--text-dim);letter-spacing:.5px;line-height:1.9;margin-top:10px;">For educational purposes only. Values shown are approximations — accuracy varies by ISP, browser, and device configuration. Always research your own privacy protections independently.</div>
     </div>
   </div>
 </div>
@@ -1267,60 +1268,60 @@ document.getElementById('info-modal').addEventListener('click', e => {
 // ══════════════════════════════════════════════════
 const TIPS = {
   // ── Network ────────────────────────────────────
-  'PUBLIC IP': '',
-  'LOCAL IP (WebRTC)': '',
-  'ISP': '',
-  'CONNECTION': '',
-  'VPN / TZ CHECK': '',
-  'REFERRER': '',
+  'PUBLIC IP': 'A unique network address assigned by your ISP, transmitted automatically to every server your browser contacts. It ties your online activity to a physical location and a specific account holder — the primary identifier used by law enforcement data requests, ISP logging systems, and IP-based ad targeting networks. In the US, a 2017 rollback of FCC privacy rules left ISPs with far fewer restrictions on sharing and monetising browsing data correlated to this address.',
+  'LOCAL IP (WebRTC)': 'Your device\'s internal network address, exposed via a browser API designed for peer-to-peer communication — not surveillance. It can leak through even when a VPN is active, because WebRTC\'s STUN requests operate at the browser level and can bypass the VPN tunnel, revealing your real local network address to any site that runs this check. Whether it leaks depends on your browser and VPN configuration — Chrome and Firefox require manual steps or extensions to close it; Brave blocks it by default.',
+  'ISP': 'The company routing all of your internet traffic — and in many jurisdictions, logging it. Since the 2017 FCC privacy rules rollback in the US, ISPs face significantly fewer restrictions on sharing and monetising browsing data, including selling anonymised profiles to advertisers without explicit opt-in. In the UK, the Investigatory Powers Act allows authorities to require ISPs to retain up to 12 months of connection records, accessible by numerous public bodies with limited judicial oversight.',
+  'CONNECTION': 'Connection type and estimated bandwidth, inferred from network timing and browser-reported values. Ad networks use this to segment users by likely context — mobile on 4G, office desktop on fibre — and adjust both ad pricing and content delivery accordingly. Low-bandwidth connections may also trigger degraded experiences on some platforms.',
+  'VPN / TZ CHECK': 'A heuristic that compares the timezone your IP address reports against the timezone your operating system reports locally. A mismatch signals that your traffic is likely routing through a VPN exit node in a different country or region. This check is blind to same-country VPN connections — a limitation exploited by anyone who chooses a local exit node.',
+  'REFERRER': 'The full URL of the page or link that brought you here, sent automatically in HTTP request headers. It tells site owners where you came from — which search query, which website, which email campaign. Analytics platforms use referrer chains to map user journeys across the web, often without the user\'s awareness that the originating URL was shared.',
   // ── System Profile ─────────────────────────────
-  'BROWSER': '',
-  'OS / PLATFORM': '',
-  'DEVICE TYPE': '',
-  'SCREEN': '',
-  'CPU CORES': '',
-  'MEMORY (RAM)': '',
+  'BROWSER': 'Your browser name and version, broadcast in every HTTP request via the User-Agent string. Specific version numbers are cross-referenced against known vulnerability databases by automated scanners. Combined with OS and hardware data, your browser version is one of the most stable inputs in a device fingerprint — it changes infrequently and is highly specific.',
+  'OS / PLATFORM': 'Your operating system and version, reported via the User-Agent header and confirmed by platform APIs. Combined with browser, screen, and hardware signals, it narrows the potential device pool dramatically. Older OS versions also flag potential unpatched vulnerabilities — a detail not lost on automated security scanners or malicious actors probing for targets.',
+  'DEVICE TYPE': 'Inferred from screen dimensions, touch capability, and User-Agent. Advertisers use device type to serve different ad formats and bid different prices — mobile and desktop inventory are priced separately on every major ad exchange. Some financial services have been documented adjusting pricing interfaces based on the perceived economic status of the detected device.',
+  'SCREEN': 'Your screen resolution and pixel density ratio, collected via the Screen API. A specific resolution combined with a high DPI value narrows the field to a handful of device models — a 2560×1664 @2x display points to a small set of recent Apple laptops. Ad networks use screen data to infer device age, price tier, and platform without any permission required.',
+  'CPU CORES': 'The number of logical processing cores in your device, readable via navigator.hardwareConcurrency. Paired with RAM and screen data, it distinguishes high-end from budget hardware, enabling device-tier profiling. This is one of several passive hardware signals used to estimate a user\'s likely disposable income for ad audience segmentation.',
+  'MEMORY (RAM)': 'Your approximate system RAM, reported in coarse buckets (2, 4, 8 GB etc.) via the Device Memory API. Alongside CPU and screen data, it feeds hardware fingerprinting models used by advertisers to segment audiences by inferred device age and economic status. The intentional coarseness of the API was meant to limit its fingerprinting value — it did not eliminate it.',
   // ── Device State ───────────────────────────────
-  'BATTERY': '',
-  'CHARGING': '',
-  'LANGUAGE': '',
-  'COLOUR DEPTH': '',
-  'DO NOT TRACK': '',
-  'AD BLOCKER': '',
+  'BATTERY': 'The remaining battery percentage, readable via the Battery Status API. A 2015 academic paper (Olejnik et al.) demonstrated that battery level combined with charge and discharge timing could be used as a short-lived tracking identifier — one that persisted across browser sessions and private browsing windows, bypassing cookie controls and standard session isolation entirely.',
+  'CHARGING': 'Whether the device is currently connected to power. Paired with battery level and discharge rate, this signal changes rarely enough to function as a tracking vector across sites — and because it was never treated as sensitive data, it bypassed privacy frameworks designed to protect cookies and location. Firefox has since removed the API entirely.',
+  'LANGUAGE': 'Your browser\'s configured language and locale, sent in every HTTP request via the Accept-Language header. It reveals likely nationality and region more precisely than an IP address alone, and is used by ad networks to target language-specific content and assess geographic market value. A non-standard locale combination is also a fingerprinting signal.',
+  'COLOUR DEPTH': 'The number of bits used to represent colour on your screen — typically 24 or 30-bit on modern displays. Individually unremarkable, it is one of dozens of signals combined in browser fingerprint hashes. Variations across display hardware generations contribute to the overall statistical uniqueness of your device profile without requiring any interaction.',
+  'DO NOT TRACK': 'A browser header that signals a preference not to be tracked. It is voluntarily self-reported, legally non-binding in most jurisdictions, and rarely honoured by major commercial ad networks or analytics platforms. Ironically, having DNT enabled makes your browser profile less common — and therefore more identifiable — in fingerprint uniqueness calculations.',
+  'AD BLOCKER': 'Detected by injecting a hidden element with class names that ad-blocking filter lists are known to target, then checking whether it was removed or hidden. Ad blocker presence triggers paywalls, alters content delivery, and is used to segment audiences — because blocker users skew toward technically sophisticated demographics valued differently by advertisers.',
   // ── Behavioural ────────────────────────────────
-  'TOTAL CLICKS': '',
-  'CURSOR X / Y': '',
-  'VELOCITY': '',
+  'TOTAL CLICKS': 'The number of interactions logged during this session, captured client-side. In production analytics and A/B testing platforms, click frequency, sequence, and timing are used to model intent, measure engagement quality, and identify frustration signals. Session replay tools record this data across millions of users simultaneously.',
+  'CURSOR X / Y': 'Your current mouse coordinates, updated continuously via mousemove events. Cursor trajectory is a proven behavioural signal — studies show it predicts form abandonment, reading intent, and emotional response to content. Tools like Hotjar and FullStory offer this as a standard feature, creating heatmaps from the aggregate movements of every visitor.',
+  'VELOCITY': 'The speed of cursor movement between frames. High velocity correlates with frustration or disorientation; slow hovering signals consideration or hesitation. Combined with click and position data, cursor velocity is a core input in behavioural biometric systems — some of which claim to identify individual users by movement style alone, independent of any login.',
   // ── Estimated Location ─────────────────────────
-  'CITY': '',
-  'REGION': '',
-  'COUNTRY': '',
-  'COORDINATES (EST.)': '',
-  'TIMEZONE': '',
-  'SOURCE': '',
+  'CITY': 'Your approximate city, derived from your IP address against a commercial geolocation database. IP-to-city accuracy varies — typically within 25–50km for residential connections — but is precise enough for targeted local advertising, geographic price discrimination, and initial law enforcement geofence warrants requesting subscriber data from ISPs.',
+  'REGION': 'The state, province, or county associated with your IP address. Sufficient for regional ad targeting, streaming content geo-blocks, and differential pricing — the same product or service is routinely priced differently based on detected region, a practice documented across airlines, e-commerce, and subscription services.',
+  'COUNTRY': 'Your country of origin as determined by IP lookup. Used to enforce legal jurisdictions — copyright, gambling regulations, sanctions compliance — and to apply country-tier ad pricing. Some markets are valued orders of magnitude higher than others in the real-time bidding ecosystem, making country detection a significant revenue variable for publishers.',
+  'COORDINATES (EST.)': 'Latitude and longitude estimated from your IP address — typically accurate to city level, not street level. Even this coarse precision is sufficient for local ad targeting, weather personalisation, and — when logged alongside timestamps — building a timestamped record of where you were when you visited a site.',
+  'TIMEZONE': 'Your local timezone, readable without any permission from the browser\'s Intl API. It refines location estimates when IP geolocation is ambiguous, reveals likely working hours for ad delivery timing optimisation, and is cross-referenced against IP-reported timezones as a VPN and proxy detection signal.',
+  'SOURCE': 'How your location was determined — IP geolocation in this case, which requires no permission and cannot be blocked without a VPN or proxy. Precise GPS location, if ever requested, is dramatically more sensitive. But IP-derived city-level precision is already sufficient for most commercial targeting purposes and many legal data requests.',
   // ── Privacy State ──────────────────────────────
-  'INCOGNITO MODE': '',
-  'COOKIES ENABLED': '',
-  'LOCAL STORAGE': '',
-  'JS ENABLED': '',
-  'COLOUR SCHEME': '',
-  'REDUCED MOTION': '',
+  'INCOGNITO MODE': 'Private browsing is detectable because browsers cap the storage quota available to private sessions to a fraction of what normal mode allows — a difference scripts can measure. Incognito deletes local history and cookies on close, but it does not hide your IP address, browser fingerprint, or any of the passive signals shown on this dashboard.',
+  'COOKIES ENABLED': 'Whether your browser accepts cookies — the original cross-site tracking mechanism. Cookie-based tracking has been partially degraded by browser privacy updates, but fingerprinting and server-side identity graphs now track users who block cookies. Disabling cookies offers limited privacy gains, because other tracking methods fill the gap — while breaking much of normal site functionality in the process.',
+  'LOCAL STORAGE': 'Whether the browser\'s localStorage API is available — a persistent key-value store that, unlike cookies, is not transmitted with requests and cannot be blocked by standard cookie controls. Ad networks have used localStorage as a "supercookie" fallback, storing tracking identifiers that survive cookie deletion unless the user manually clears site data.',
+  'JS ENABLED': 'Whether JavaScript is running in your browser — and therefore whether virtually every fingerprinting, behavioural tracking, and analytics system on this page is operational. Disabling JavaScript is one of the most effective privacy measures available, and one of the most disruptive to normal web use, as most modern sites depend on it to function at all.',
+  'COLOUR SCHEME': 'Your operating system\'s light or dark mode preference, readable via a CSS media query without any permission. While primarily a UI signal, preference data contributes to fingerprint entropy. In aggregate, dark mode adoption skews toward younger, technically-engaged audiences — a segmentation signal used by some platforms to adjust content and messaging.',
+  'REDUCED MOTION': 'Whether you\'ve enabled reduced motion preferences in your OS — typically set by users with vestibular disorders, migraines, or photosensitive epilepsy. Accessibility preferences contribute to fingerprint uniqueness. Health-related browser signals have been proposed and in some cases used to infer disability status, which raises significant concerns for insurance and employment contexts.',
   // ── Intelligence Notes ─────────────────────────
-  'CANVAS FP': '',
-  'WebRTC LEAK': '',
-  'THREAT STARS': '',
+  'CANVAS FP': 'Generated by rendering text and shapes to a hidden canvas element and hashing the pixel output. Subtle differences in GPU hardware, graphics drivers, and font rendering produce a unique result per device, browser, and OS combination. Unlike cookies, it does not clear when you wipe your browsing data or switch to private mode — only changing browser, OS, or using a canvas-randomising extension will alter it.',
+  'WebRTC LEAK': 'Your local network IP address, potentially exposed via the WebRTC protocol even when a VPN is active. WebRTC\'s STUN requests operate at the browser level and can route outside the VPN tunnel, revealing your real internal address to any site that runs this check. The leak is browser and configuration dependent — Chrome and Firefox require manual intervention; Brave and properly configured VPNs block it by default.',
+  'THREAT STARS': 'A visual shorthand for your overall passive exposure level, derived from the number and sensitivity of active tracking signals. Five stars reflects a full passive data surface: public IP, geolocation, hardware fingerprint, and browser environment all simultaneously readable by any website you visit — without your knowledge or consent.',
   // ── Exposure Summary ───────────────────────────
-  'THREAT LEVEL': '',
-  'ACTIVE SIGNALS': '',
-  'LOCATION PREC.': '',
-  'PROTECTIONS': '',
+  'THREAT LEVEL': 'A composite assessment based on how many high-value identifying signals your browser is currently broadcasting. Higher levels reflect a larger passive data surface available to any website you visit — without any action on your part, and without any notification that the data has been collected.',
+  'ACTIVE SIGNALS': 'The live tracking attributes confirmed as readable in this session. Each active signal is available to every website you visit, without consent and without disclosure in most jurisdictions. In combination, they form a profile precise enough to re-identify you across sites, sessions, and devices — even after clearing your browsing history.',
+  'LOCATION PREC.': 'How precisely your physical location can be estimated from the signals available. IP-derived city-level precision requires no permission and cannot be withheld without a VPN or proxy. It is sufficient for local ad targeting, geographic content restrictions, and initial law enforcement data requests to your ISP.',
+  'PROTECTIONS': 'Privacy-enhancing tools or browser settings detected in this session. The absence of any protections means your browser is presenting its full default data surface to every site you visit. Most users have none active — not through informed choice, but because browsers default to maximum compatibility rather than minimum exposure.',
   // ── Network Environment ────────────────────────
-  'PLATFORM': '',
-  'VENDOR': '',
-  'HARDWARE CONC.': '',
-  'MAX TOUCH PTS': '',
-  'PDF VIEWER': '',
-  'WEBDRIVER': '',
+  'PLATFORM': 'The operating system platform string returned by navigator.platform — a legacy API that reports values like "MacIntel" or "Win32" even on modern ARM hardware. It contributes to browser fingerprinting by confirming OS family and helps identify inconsistencies that suggest spoofing or automation tools are active.',
+  'VENDOR': 'The browser vendor string — "Google Inc." for Chromium-based browsers, empty string for Firefox. It confirms which rendering engine is in use, which affects fingerprint entropy calculations and helps ad tech systems determine compatibility with specific tracking and measurement APIs tied to particular browser families.',
+  'HARDWARE CONC.': 'The number of logical CPU cores, returned by navigator.hardwareConcurrency. Alongside RAM and GPU data, it is used to estimate device performance tier and age. High core counts (16+) strongly suggest developer workstations or high-end machines — a valuable and expensive audience segment for B2B advertising.',
+  'MAX TOUCH PTS': 'The maximum number of simultaneous touch points the device supports, returned by navigator.maxTouchPoints. Zero confirms no touchscreen — a strong desktop classification signal. Non-zero values help distinguish tablet from phone hardware generations. This feeds device-type detection that underlies the pricing differential between mobile and desktop ad inventory.',
+  'PDF VIEWER': 'Whether a built-in PDF viewer is available — detectable via navigator.mimeTypes or pdfViewerEnabled. A minor but genuine fingerprinting input: third-party PDF plugins have become rare, while built-in support varies by browser and version. It contributes a small amount of entropy to the overall uniqueness of your browser environment.',
+  'WEBDRIVER': 'Whether the browser is being controlled by automation software such as Selenium, Puppeteer, or Playwright — detectable via the navigator.webdriver flag, which automation tools set to true. Sites use this to block bots, scrapers, and headless browsers. A detected webdriver flag can trigger CAPTCHAs, access denial, or deliberately degraded responses.',
 };
 
 (function() {
